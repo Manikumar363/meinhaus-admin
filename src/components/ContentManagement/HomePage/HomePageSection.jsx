@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
-import SliderSection from './SliderSection';
-import ArticlesSection from './ArticlesSection';
-import TestimonialsSection from './TestimonialsSection';
-import ComplimentarySection from './ComplimentarySection';
+import SliderSection from '../SliderSection/SliderSection';
+
 
 const HomePageSection = () => {
   const [activeSection, setActiveSection] = useState('slider');
 
   const sections = [
     { id: 'slider', name: 'Slider Section', component: SliderSection },
-    { id: 'articles', name: 'Articles Section', component: ArticlesSection },
-    { id: 'testimonials', name: 'Client Testimonials', component: TestimonialsSection },
-    { id: 'complimentary', name: 'Complimentary Services', component: ComplimentarySection }
   ];
 
   const renderSection = () => {
