@@ -9,6 +9,7 @@ import EducationSection from '../components/EducationPage/EducationPageSection';
 import GallerySection from '../components/GalleryPage/GalleryPageSection';
 import ComplimentaryServicePage from '../components/ComplimentaryServiceRequest/ComplimentaryServicePage';
 import QueryPage from '../components/Query/QueryPageSection';
+import LogoutButton from '../components/LogoutButton';
 
 const Dashboard = () => {
   const [activeMenu, setActiveMenu] = useState('content'); // default to content
@@ -208,6 +209,9 @@ const Dashboard = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-6">
+          <div className="flex justify-end">
+            <LogoutButton className="px-3 py-1 bg-red-600 text-white rounded" />
+          </div>
           {activeMenu === 'content' && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               {/* Only show selected content page */}

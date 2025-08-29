@@ -1,16 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRequestPasswordResetMutation } from '../../stores/api/auth/authApi';
+import { toast } from 'react-toastify';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const [
+    requestReset,
+    { isLoading, isSuccess, error, data }
+  ] = useRequestPasswordResetMutation();
+
+  const successShown = useRef(false);
+
+  useEffect(() => {
+    if (isSuccess && !successShown.current) {
+      toast.success(
+        (data && data.message) || 'If email exists, password reset link has been sent'
+      );
+      successShown.current = true;
+    }
+    if (error) {
+      const msg = error?.data?.message || error?.error || 'Request failed';
+      toast.error(msg);
+    }
+  }, [isSuccess, error, data]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle password reset logic here
-    console.log('Password reset attempt for:', email);
-    setIsSubmitted(true);
+    if (!email) return;
+    requestReset({ email });
   };
 
   return (
@@ -74,6 +94,7 @@ const ForgotPassword = () => {
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Mail ID"
                     required
+                    disabled={isLoading || isSuccess}
                   />
                 </div>
               </div>
@@ -81,23 +102,29 @@ const ForgotPassword = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out"
+                disabled={isLoading || isSuccess}
+                className="w-full flex justify-center py-3 px-4 rounded-lg text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 disabled:opacity-60 transition"
               >
-                Send Password Reset Link
+                {isLoading ? 'Sending...' : 'Send Password Reset Link'}
               </button>
             </form>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mt-6 p-4 border border-red-300 rounded-lg bg-red-50 text-sm text-red-700">
+                {error.data?.message || error.error}
+              </div>
+            )}
+
             {/* Success Message */}
-            {isSubmitted && (
+            {isSuccess && !error && (
               <div className="mt-6 p-4 border border-orange-300 rounded-lg bg-orange-50">
-                <p className="text-sm text-gray-700">
-                  Please check your email. We've sent you a reset link - follow it to reset your password.
-                </p>
+                <p className="text-sm text-gray-700">{data.message}</p>
                 <div className="mt-4 text-center">
-                  <button 
+                  <button
                     type="button"
                     className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                    onClick={() => navigate('/set-new-password')}
+                    onClick={() => navigate('/auth/set-new-password')}
                   >
                     Continue to Set New Password
                   </button>
@@ -107,13 +134,13 @@ const ForgotPassword = () => {
 
             {/* Back to Login */}
             <div className="mt-6 text-center">
-                           <button 
-               type="button" 
-               className="text-sm font-medium text-blue-600 hover:text-blue-500"
-               onClick={() => navigate('/login')}
-             >
-               ← Back to Login
-             </button>
+              <button
+                type="button"
+                className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                onClick={() => navigate('/auth/signin')}
+              >
+                ← Back to Login
+              </button>
             </div>
           </div>
         </div>

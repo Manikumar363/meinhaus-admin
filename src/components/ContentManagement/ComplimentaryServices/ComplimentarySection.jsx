@@ -1,136 +1,125 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { uploadFile } from '../../../../src/utils/uploadFile';
+import { ErrorToast, SuccessToast } from '../../ui/Toasts';
 
-const API_BASE = '/api/v1/complimentary_service'; // GET (list) POST (create) PUT /:id DELETE /:id
+// API root from .env (no trailing slash)
+const API_BASE = (process.env.REACT_APP_API_URL || '').replace(/\/+$/, '');
 
-const fileToDataUrl = (file) =>
-  new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = e => res(e.target.result);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
+// Endpoints:
+// GET    /comp-services
+// POST   /comp-services                { picPath, name, description }
+// PUT    /comp-services/:id            { picPath, name, description }
+// DELETE /comp-services/:id
+//
+// If picPath comes back relative, prepend asset origin.
+const buildImageUrl = (p) => {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  return `https://dev-carenest.s3.ap-south-1.amazonaws.com${p}`;
+};
 
 const emptyService = () => ({
   id: null,
-  name: '',
-  description: '',
   picPath: '',
-  isActive: true,
-  order: 0
+  name: '',
+  description: ''
 });
 
 const ComplimentarySection = () => {
+  const token = useSelector(s => s.auth.accessToken);
+  const authHeader = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
+
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState('');
   const [search, setSearch] = useState('');
-  const [error, setError] = useState('');
+
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
-  // ---- API STUBS (replace with real calls) ----
-  const fetchServices = async () => {
+  // ---- API calls (memoized) ----
+  const fetchServices = useCallback(async () => {
     setLoading(true);
-    setError('');
+    setFetchError('');
     try {
-      // const res = await fetch(API_BASE);
-      // if(!res.ok) throw new Error('Fetch failed');
-      // const json = await res.json();
-      // setServices(json.data.services);
-      setServices([
-        {
-          id: '1',
-          name: 'Real Estate Services',
-          description:
-            'In MEINHAUS commitment ... refer you the top local professional.',
-          picPath:
-            'https://dev-carenest.s3.ap-south-1.amazonaws.com/service/sample1.webp',
-          isActive: true,
-          order: 1
-        },
-        {
-          id: '2',
-          name: 'Lending Services',
-            description: 'Professional lending and financing solutions.',
-            picPath: 'https://dev-carenest.s3.ap-south-1.amazonaws.com/service/sample2.webp',
-            isActive: true,
-            order: 2
-        }
-      ]);
+      const res = await fetch(`${API_BASE}/comp-services`, { headers: { ...authHeader } });
+      const data = await res.json().catch(()=>({}));
+      if (!res.ok || !data.success) throw new Error(data.message || `Fetch failed (${res.status})`);
+      setServices(data.data?.services || []);
     } catch (e) {
-      setError(e.message);
+      setFetchError(e.message);
+      toast.error(e.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [authHeader]);
 
   const createService = async (payload) => {
-    // const res = await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    // if(!res.ok) throw new Error('Create failed');
-    // const json = await res.json();
-    // return json.data.service;
-    return { ...payload, id: Date.now().toString() }; // mock
+    const res = await fetch(`${API_BASE}/comp-services`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', ...authHeader },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Create failed (${res.status})`);
+    return data.data?.service || null;
   };
 
   const updateServiceApi = async (id, payload) => {
-    // const res = await fetch(`${API_BASE}/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    // if(!res.ok) throw new Error('Update failed');
-    // const json = await res.json();
-    // return json.data.service;
-    return { ...payload, id };
+    const res = await fetch(`${API_BASE}/comp-services/${id}`, {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json', ...authHeader },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Update failed (${res.status})`);
+    return data.data?.service || null;
   };
 
   const deleteServiceApi = async (id) => {
-    // const res = await fetch(`${API_BASE}/${id}`,{method:'DELETE'});
-    // if(!res.ok) throw new Error('Delete failed');
+    const res = await fetch(`${API_BASE}/comp-services/${id}`, {
+      method:'DELETE',
+      headers:{ ...authHeader }
+    });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Delete failed (${res.status})`);
     return true;
   };
-  // ---------------------------------------------
 
-  useEffect(() => {
-    fetchServices();
-  }, []);
+  useEffect(() => { fetchServices(); }, [fetchServices]);
 
-  const filtered = services
-    .filter(s =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => a.order - b.order);
+  const filtered = services.filter(s =>
+    s.name?.toLowerCase().includes(search.toLowerCase()) ||
+    s.description?.toLowerCase().includes(search.toLowerCase())
+  );
 
+  // ---- Modal / Form ----
   const openCreate = () => {
-    setEditing({ ...emptyService(), order: (services.length ? Math.max(...services.map(s => s.order)) + 1 : 1) });
+    setEditing(emptyService());
     setShowModal(true);
-    setError('');
   };
-
   const openEdit = (svc) => {
     setEditing({ ...svc });
     setShowModal(true);
-    setError('');
   };
-
   const closeModal = () => {
     if (saving) return;
     setShowModal(false);
     setEditing(null);
-    setError('');
   };
-
   const handleField = (field, value) => {
     setEditing(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleImageFile = async (file) => {
-    if (!file) return;
-    const url = await fileToDataUrl(file); // replace with actual upload -> URL
-    handleField('picPath', url);
-  };
-
   const validate = (svc) => {
-    if (!svc.name) return 'Name required';
-    if (!svc.description) return 'Description required';
-    if (!svc.picPath) return 'Image required';
+    if (!svc.name.trim()) return 'Name required';
+    if (!svc.description.trim()) return 'Description required';
+    if (!svc.picPath.trim()) return 'Image URL required';
     return '';
   };
 
@@ -138,30 +127,45 @@ const ComplimentarySection = () => {
     if (!editing) return;
     const v = validate(editing);
     if (v) {
-      setError(v);
+      toast.error(v, { className:'toast-shell', progressClassName:'toast-progress-red' });
       return;
     }
     setSaving(true);
-    setError('');
     try {
       const payload = {
-        picPath: editing.picPath,
-        name: editing.name,
-        description: editing.description,
-        isActive: editing.isActive,
-        order: editing.order
+        picPath: editing.picPath.trim(),
+        name: editing.name.trim(),
+        description: editing.description.trim()
       };
-      let saved;
       if (editing.id) {
-        saved = await updateServiceApi(editing.id, payload);
-        setServices(prev => prev.map(s => (s.id === saved.id ? saved : s)));
+        const updated = await updateServiceApi(editing.id, payload);
+        if (updated) {
+          setServices(prev => prev.map(s => s.id === editing.id ? { ...s, ...updated } : s));
+        } else {
+          fetchServices();
+        }
+        toast(<SuccessToast message="Service updated" />, {
+          className:'toast-shell',
+          progressClassName:'toast-progress-green',
+          autoClose:3000
+        });
       } else {
-        saved = await createService(payload);
-        setServices(prev => [...prev, saved]);
+        const created = await createService(payload);
+        if (created) setServices(prev => [created, ...prev]);
+        else fetchServices();
+        toast(<SuccessToast message="Service added" />, {
+          className:'toast-shell',
+          progressClassName:'toast-progress-green',
+          autoClose:3000
+        });
       }
       closeModal();
     } catch (e) {
-      setError(e.message);
+      toast(<ErrorToast message={e.message} />, {
+        className:'toast-shell',
+        progressClassName:'toast-progress-red',
+        autoClose:5000
+      });
     } finally {
       setSaving(false);
     }
@@ -169,27 +173,16 @@ const ComplimentarySection = () => {
 
   const deleteService = async (id) => {
     if (!window.confirm('Delete this service?')) return;
+    setDeletingId(id);
     try {
       await deleteServiceApi(id);
       setServices(prev => prev.filter(s => s.id !== id));
+      toast.success('Deleted', { className:'toast-shell', progressClassName:'toast-progress-green' });
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
+    } finally {
+      setDeletingId(null);
     }
-  };
-
-  const toggleActive = (id) => {
-    setServices(prev =>
-      prev.map(s => (s.id === id ? { ...s, isActive: !s.isActive } : s))
-    );
-  };
-
-  const setOrder = (id, value) => {
-    const num = Number(value) || 0;
-    setServices(prev =>
-      prev
-        .map(s => (s.id === id ? { ...s, order: num } : s))
-        .sort((a, b) => a.order - b.order)
-    );
   };
 
   return (
@@ -197,7 +190,7 @@ const ComplimentarySection = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Complimentary Services</h2>
-          <p className="text-gray-600 text-sm mt-1">Manage complimentary services list</p>
+          <p className="text-gray-600 text-sm mt-1">Manage services list</p>
         </div>
         <div className="flex gap-2">
           <input
@@ -216,32 +209,28 @@ const ComplimentarySection = () => {
         </div>
       </div>
 
-      {error && !showModal && (
-        <div className="text-sm text-red-600">{error}</div>
-      )}
+      {fetchError && <div className="text-sm text-red-600">{fetchError}</div>}
 
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="min-w-full text-sm">
           <thead>
             <tr className="bg-gray-100 text-left font-semibold text-gray-700">
-              <th className="px-4 py-2 w-10">#</th>
+              <th className="px-4 py-2 w-12">#</th>
               <th className="px-4 py-2">Image</th>
               <th className="px-4 py-2">Name</th>
               <th className="px-4 py-2">Description</th>
-              <th className="px-4 py-2 text-center">Order</th>
-              <th className="px-4 py-2 text-center">Active</th>
               <th className="px-4 py-2 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">Loading...</td>
+                <td colSpan={5} className="px-4 py-6 text-center text-gray-500">Loading...</td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">No services</td>
+                <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No services</td>
               </tr>
             )}
             {filtered.map((s, idx) => (
@@ -250,7 +239,7 @@ const ComplimentarySection = () => {
                 <td className="px-4 py-2 align-top">
                   {s.picPath ? (
                     <img
-                      src={s.picPath}
+                      src={buildImageUrl(s.picPath)}
                       alt={s.name}
                       className="w-20 h-14 object-cover rounded border"
                     />
@@ -258,31 +247,11 @@ const ComplimentarySection = () => {
                     <span className="text-xs text-gray-400">No image</span>
                   )}
                 </td>
-                <td className="px-4 py-2 align-top font-medium">{s.name || '-'}</td>
+                <td className="px-4 py-2 align-top font-medium">{s.name}</td>
                 <td className="px-4 py-2 align-top max-w-xs">
-                  {s.description.length > 80
-                    ? s.description.slice(0, 80) + '...'
-                    : s.description || '-'}
-                </td>
-                <td className="px-4 py-2 align-top text-center">
-                  <input
-                    type="number"
-                    className="w-16 px-2 py-1 border rounded text-center"
-                    value={s.order}
-                    onChange={e => setOrder(s.id, e.target.value)}
-                  />
-                </td>
-                <td className="px-4 py-2 align-top text-center">
-                  <button
-                    onClick={() => toggleActive(s.id)}
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      s.isActive
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {s.isActive ? 'Active' : 'Inactive'}
-                  </button>
+                  {s.description?.length > 90
+                    ? s.description.slice(0, 90) + '...'
+                    : s.description}
                 </td>
                 <td className="px-4 py-2 align-top text-center space-x-2">
                   <button
@@ -293,9 +262,10 @@ const ComplimentarySection = () => {
                   </button>
                   <button
                     onClick={() => deleteService(s.id)}
-                    className="text-red-600 hover:text-red-800 text-xs font-medium"
+                    className="text-red-600 hover:text-red-800 text-xs font-medium disabled:opacity-40"
+                    disabled={deletingId === s.id}
                   >
-                    Delete
+                    {deletingId === s.id ? 'Deleting…' : 'Delete'}
                   </button>
                 </td>
               </tr>
@@ -320,11 +290,7 @@ const ComplimentarySection = () => {
               </button>
             </div>
 
-            {error && (
-              <div className="mb-3 text-sm text-red-600">{error}</div>
-            )}
-
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
                 <input
@@ -338,7 +304,7 @@ const ComplimentarySection = () => {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
                 <textarea
-                  rows={4}
+                  rows={5}
                   value={editing.description}
                   onChange={e => handleField('description', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
@@ -347,56 +313,51 @@ const ComplimentarySection = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Image URL (picPath)</label>
-                <div className="flex gap-4 flex-wrap items-start">
-                  <div>
-                    <input
-                      type="text"
-                      value={editing.picPath}
-                      onChange={e => handleField('picPath', e.target.value)}
-                      className="w-72 px-3 py-2 border rounded mb-2"
-                      placeholder="https://..."
-                    />
+                <input
+                  type="text"
+                  value={editing.picPath}
+                  onChange={e => handleField('picPath', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="https://... or /service/xyz.webp"
+                />
+                <div className="flex items-center gap-3 mt-2">
+                  <label className="inline-flex items-center px-3 py-2 bg-neutral-200 hover:bg-neutral-300 text-xs rounded cursor-pointer">
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={e => handleImageFile(e.target.files?.[0] || null)}
-                      className="text-xs"
-                      disabled={saving}
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        try {
+                          const path = await uploadFile({ file, token, base: API_BASE });
+                          handleField('picPath', path);
+                          toast.success('Image uploaded', { className:'toast-shell', progressClassName:'toast-progress-green' });
+                        } catch (err) {
+                          toast(<ErrorToast message={err.message} />, {
+                            className:'toast-shell',
+                            progressClassName:'toast-progress-red'
+                          });
+                        } finally {
+                          setUploading(false);
+                          e.target.value = '';
+                        }
+                      }}
                     />
-                    <p className="text-[10px] text-gray-500 mt-1">
-                      Paste URL or upload (mock upload).
-                    </p>
-                  </div>
+                    {uploading ? 'Uploading…' : 'Upload Image'}
+                  </label>
                   {editing.picPath && (
-                    <img
-                      src={editing.picPath}
-                      alt="preview"
-                      className="h-24 w-32 object-cover rounded border"
-                    />
+                    <span className="text-[10px] text-green-600 break-all">{editing.picPath}</span>
                   )}
                 </div>
-              </div>
-              <div className="flex gap-6">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Order</label>
-                  <input
-                    type="number"
-                    value={editing.order}
-                    onChange={e => handleField('order', Number(e.target.value))}
-                    className="w-24 px-3 py-2 border rounded"
+                {editing.picPath && (
+                  <img
+                    src={buildImageUrl(editing.picPath)}
+                    alt="preview"
+                    className="h-24 w-36 object-cover rounded border mt-3"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-                  <select
-                    value={editing.isActive ? 'active' : 'inactive'}
-                    onChange={e => handleField('isActive', e.target.value === 'active')}
-                    className="w-28 px-3 py-2 border rounded"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
+                )}
               </div>
             </div>
 
@@ -413,7 +374,7 @@ const ComplimentarySection = () => {
                 className="px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                 disabled={saving}
               >
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>

@@ -1,133 +1,126 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { uploadFile } from '../../../../src/utils/uploadFile';
 
-// TODO: Adjust to your actual backend base path
-const API_BASE = '/api/article'; // e.g. https://api.example.com/article
+// Root from env
+const API_BASE = (process.env.REACT_APP_API_URL || '').replace(/\/+$/, '');
 
-// Utility: create slug from title
-const slugify = (str='') =>
-  str
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g,'')
-    .replace(/\s+/g,'-')
-    .replace(/-+/g,'-');
-
-// Fake upload (base64). Replace with real uploader returning a URL.
-const fileToDataUrl = (file) =>
-  new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = e => res(e.target.result);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
+// Helper: build full image URL if backend returns relative picPath
+const buildImageUrl = (p) => {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  // Adjust if backend serves static differently
+  return `https://dev-carenest.s3.ap-south-1.amazonaws.com${p}`;
+};
 
 const emptyArticle = () => ({
-  id: null,                // backend id
+  id: null,
+  picPath: '',
+  author: '',
   title: '',
-  slug: '',
-  excerpt: '',
+  description: '',
   content: '',
-  imageUrl: '',
-  category: '',
-  tags: [],                // string[]
-  status: 'draft',         // draft | published
-  order: 0,
-  readTime: 0,             // minutes
-  metaTitle: '',
-  metaDescription: '',
 });
 
 const ArticlesSection = () => {
+  const token = useSelector(s => s.auth.accessToken);
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(null); // article object in modal
+  const [fetchError, setFetchError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null); // article in form
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
+  const [viewingId, setViewingId] = useState(null); // when fetching details
+  const [uploading, setUploading] = useState(false);
 
-  // --- API stubs (uncomment & adapt when backend ready) ---
-  const fetchAllArticles = async () => {
+  // ---- API Calls ----
+  const fetchAll = async () => {
     setLoading(true);
-    setError('');
+    setFetchError('');
     try {
-      // const res = await fetch(API_BASE);
-      // if(!res.ok) throw new Error('Failed to fetch');
-      // const data = await res.json();
-      // setArticles(data);
-      // TEMP static seed (remove later)
-      setArticles([
-        {
-          ...emptyArticle(),
-          id: 1,
-            title: 'Sit quaerat omnis ve',
-            slug: 'sit-quaerat-omnis-ve',
-            excerpt: 'Incididunt id sunt...',
-            content: 'Full article content here...',
-            imageUrl: '/article-1.jpg',
-            category: 'General',
-            tags: ['kitchen','design'],
-            status: 'published',
-            order: 1,
-            readTime: 4,
-            metaTitle: 'Sit quaerat omnis ve',
-            metaDescription: 'Incididunt id sunt...'
-        },
-        {
-          ...emptyArticle(),
-          id: 2,
-            title: 'Expedita similique s',
-            slug: 'expedita-similique-s',
-            excerpt: 'Eos maxime laborum...',
-            content: 'Second article content...',
-            imageUrl: '/article-2.jpg',
-            category: 'General',
-            tags: ['flowers'],
-            status: 'published',
-            order: 2,
-            readTime: 3,
-            metaTitle: 'Expedita similique',
-            metaDescription: 'Eos maxime laborum...'
-        }
-      ]);
+      const res = await fetch(`${API_BASE}/article`, { headers: { ...authHeader } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) throw new Error(data.message || `Fetch failed (${res.status})`);
+      const list = data.data?.articles || [];
+      setArticles(list);
     } catch (e) {
-      setError(e.message);
+      setFetchError(e.message);
+      toast.error(e.message, { className: 'toast-shell', progressClassName: 'toast-progress-red' });
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchDetails = async (id) => {
+    setViewingId(id);
+    try {
+      const res = await fetch(`${API_BASE}/article/${id}`, { headers: { ...authHeader } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) throw new Error(data.message || 'Fetch details failed');
+      const art = data.data?.article;
+      if (art) {
+        setEditing({
+          id: art.id,
+          picPath: art.picPath || '',
+            author: art.author || '',
+          title: art.title || '',
+          description: art.description || '',
+          content: art.content || '',
+        });
+        setShowModal(true);
+      }
+    } catch (e) {
+      toast.error(e.message, { className: 'toast-shell', progressClassName: 'toast-progress-red' });
+    } finally {
+      setViewingId(null);
+    }
+  };
+
   const createArticle = async (payload) => {
-    // const res = await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    // if(!res.ok) throw new Error('Create failed');
-    // return await res.json();
-    return { ...payload, id: Date.now() }; // temp mock
+    const res = await fetch(`${API_BASE}/article`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Create failed (${res.status})`);
+    // If backend returns created article, merge; else refetch
+    return data.data?.article || null;
   };
 
   const updateArticleApi = async (id, payload) => {
-    // const res = await fetch(`${API_BASE}/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    // if(!res.ok) throw new Error('Update failed');
-    // return await res.json();
-    return { ...payload, id }; // mock
+    const res = await fetch(`${API_BASE}/article/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Update failed (${res.status})`);
+    return data.data?.article || null;
   };
 
+  // Delete endpoint in your prompt shows /carousal/home/:id (likely a typo).
+  // Assuming delete article should be: DELETE /article/:id
   const deleteArticleApi = async (id) => {
-    // const res = await fetch(`${API_BASE}/${id}`,{method:'DELETE'});
-    // if(!res.ok) throw new Error('Delete failed');
+    const res = await fetch(`${API_BASE}/article/${id}`, {
+      method: 'DELETE',
+      headers: { ...authHeader }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Delete failed (${res.status})`);
     return true;
   };
 
-  useEffect(() => {
-    fetchAllArticles();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  // --- Handlers ---
+  // ---- Handlers ----
   const openCreate = () => {
-    setEditing({ ...emptyArticle() });
-    setShowModal(true);
-  };
-
-  const openEdit = (art) => {
-    setEditing({ ...art, tags: [...(art.tags || [])] });
+    setEditing(emptyArticle());
     setShowModal(true);
   };
 
@@ -135,56 +128,58 @@ const ArticlesSection = () => {
     if (saving) return;
     setShowModal(false);
     setEditing(null);
-    setError('');
   };
 
   const handleField = (field, value) => {
-    setEditing(prev => {
-      if (!prev) return prev;
-      let next = { ...prev, [field]: value };
-      if (field === 'title' && !prev.id) {
-        next.slug = slugify(value);
-        if (!next.metaTitle) next.metaTitle = value;
-      }
-      return next;
-    });
-  };
-
-  const handleImageFile = async (file) => {
-    if (!file) return;
-    const url = await fileToDataUrl(file);
-    handleField('imageUrl', url);
-  };
-
-  const handleTagsChange = (str) => {
-    const tags = str
-      .split(',')
-      .map(t => t.trim())
-      .filter(Boolean);
-    handleField('tags', tags);
+    setEditing(prev => prev ? { ...prev, [field]: value } : prev);
   };
 
   const saveArticle = async () => {
     if (!editing) return;
+    if (!editing.title.trim()) {
+      toast.error('Title required', { className: 'toast-shell', progressClassName: 'toast-progress-red' });
+      return;
+    }
+    if (!editing.description.trim()) {
+      toast.error('Description required', { className: 'toast-shell', progressClassName: 'toast-progress-red' });
+      return;
+    }
+    if (!editing.content.trim()) {
+      toast.error('Content required', { className: 'toast-shell', progressClassName: 'toast-progress-red' });
+      return;
+    }
     setSaving(true);
-    setError('');
     try {
-      const payload = { ...editing };
-      // Normalize
-      payload.tags = payload.tags || [];
-      if (!payload.slug) payload.slug = slugify(payload.title);
-
-      let saved;
-      if (payload.id) {
-        saved = await updateArticleApi(payload.id, payload);
-        setArticles(prev => prev.map(a => (a.id === saved.id ? saved : a)));
+      const payload = {
+        picPath: editing.picPath,
+        author: editing.author,
+        title: editing.title,
+        description: editing.description,
+        content: editing.content
+      };
+      if (editing.id) {
+        const updated = await updateArticleApi(editing.id, payload);
+        if (updated) {
+          setArticles(prev => prev.map(a => a.id === editing.id
+            ? { ...a, ...updated }
+            : a));
+        } else {
+          // fallback refresh if backend does not return updated article
+          fetchAll();
+        }
+        toast.success('Article updated', { className: 'toast-shell', progressClassName: 'toast-progress-green' });
       } else {
-        saved = await createArticle(payload);
-        setArticles(prev => [...prev, saved]);
+        const created = await createArticle(payload);
+        if (created) {
+          setArticles(prev => [...prev, created]);
+        } else {
+          fetchAll();
+        }
+        toast.success('Article created', { className: 'toast-shell', progressClassName: 'toast-progress-green' });
       }
       closeModal();
     } catch (e) {
-      setError(e.message);
+      toast.error(e.message, { className: 'toast-shell', progressClassName: 'toast-progress-red' });
     } finally {
       setSaving(false);
     }
@@ -192,48 +187,45 @@ const ArticlesSection = () => {
 
   const deleteArticle = async (id) => {
     if (!window.confirm('Delete this article?')) return;
+    setDeletingId(id);
     try {
       await deleteArticleApi(id);
       setArticles(prev => prev.filter(a => a.id !== id));
+      toast.success('Deleted', { className: 'toast-shell', progressClassName: 'toast-progress-green' });
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message, { className: 'toast-shell', progressClassName: 'toast-progress-red' });
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  const toggleStatus = (id) => {
-    setArticles(prev =>
-      prev.map(a =>
-        a.id === id
-          ? { ...a, status: a.status === 'published' ? 'draft' : 'published' }
-          : a
-      )
-    );
-  };
-
-  // Sorting by order
-  const setOrder = (id, value) => {
-    const num = Number(value) || 0;
-    setArticles(prev =>
-      prev
-        .map(a => (a.id === id ? { ...a, order: num } : a))
-        .sort((a, b) => a.order - b.order)
-    );
-  };
+  const filtered = articles.filter(a =>
+    a.title?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="p-6 bg-white rounded-lg shadow space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <h2 className="text-lg font-semibold">Articles</h2>
-        <button
-          onClick={openCreate}
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Search title..."
+            className="border rounded px-3 py-2 text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            onClick={openCreate}
             className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
-        >
-          + Create Article
-        </button>
+          >
+            + Create Article
+          </button>
+        </div>
       </div>
 
-      {error && !showModal && (
-        <div className="text-sm text-red-600">{error}</div>
+      {fetchError && (
+        <div className="text-sm text-red-600">{fetchError}</div>
       )}
 
       <div className="overflow-x-auto border border-gray-200 rounded-lg">
@@ -243,36 +235,33 @@ const ArticlesSection = () => {
               <th className="px-3 py-2 w-10">#</th>
               <th className="px-3 py-2">Image</th>
               <th className="px-3 py-2">Title</th>
-              <th className="px-3 py-2">Slug</th>
-              <th className="px-3 py-2">Category</th>
-              <th className="px-3 py-2">Tags</th>
-              <th className="px-3 py-2 text-center">Order</th>
-              <th className="px-3 py-2 text-center">Status</th>
+              <th className="px-3 py-2">Author</th>
+              <th className="px-3 py-2">Description</th>
               <th className="px-3 py-2 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={9} className="px-3 py-6 text-center text-gray-500">
+                <td colSpan={6} className="px-3 py-6 text-center text-gray-500">
                   Loading...
                 </td>
               </tr>
             )}
-            {!loading && articles.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-3 py-6 text-center text-gray-500">
-                  No articles. Create one.
+                <td colSpan={6} className="px-3 py-6 text-center text-gray-500">
+                  No articles.
                 </td>
               </tr>
             )}
-            {articles.map((a, idx) => (
+            {filtered.map((a, idx) => (
               <tr key={a.id} className="border-t">
                 <td className="px-3 py-2 align-top">{idx + 1}</td>
                 <td className="px-3 py-2 align-top">
-                  {a.imageUrl ? (
+                  {a.picPath ? (
                     <img
-                      src={a.imageUrl}
+                      src={buildImageUrl(a.picPath)}
                       alt=""
                       className="h-14 w-20 object-cover rounded border"
                     />
@@ -280,46 +269,27 @@ const ArticlesSection = () => {
                     <span className="text-xs text-gray-400">No image</span>
                   )}
                 </td>
-                <td className="px-3 py-2 align-top">{a.title || <span className="text-gray-400 italic">Untitled</span>}</td>
                 <td className="px-3 py-2 align-top">
-                  <span className="text-gray-600">{a.slug}</span>
+                  {a.title || <span className="text-gray-400 italic">Untitled</span>}
                 </td>
-                <td className="px-3 py-2 align-top">{a.category || '-'}</td>
+                <td className="px-3 py-2 align-top">{a.author || '-'}</td>
                 <td className="px-3 py-2 align-top">
-                  {a.tags?.length ? a.tags.join(', ') : '-'}
-                </td>
-                <td className="px-3 py-2 align-top text-center">
-                  <input
-                    type="number"
-                    className="w-16 px-2 py-1 border rounded text-center"
-                    value={a.order}
-                    onChange={(e) => setOrder(a.id, e.target.value)}
-                  />
-                </td>
-                <td className="px-3 py-2 align-top text-center">
-                  <button
-                    onClick={() => toggleStatus(a.id)}
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      a.status === 'published'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {a.status}
-                  </button>
+                  <span className="line-clamp-3">{a.description}</span>
                 </td>
                 <td className="px-3 py-2 align-top text-center space-x-2">
                   <button
-                    onClick={() => openEdit(a)}
-                    className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                    onClick={() => fetchDetails(a.id)}
+                    className="text-blue-600 hover:text-blue-800 text-xs font-medium disabled:opacity-40"
+                    disabled={viewingId === a.id}
                   >
-                    Edit
+                    {viewingId === a.id ? 'Loading...' : 'Edit'}
                   </button>
                   <button
                     onClick={() => deleteArticle(a.id)}
-                    className="text-red-600 hover:text-red-800 text-xs font-medium"
+                    className="text-red-600 hover:text-red-800 text-xs font-medium disabled:opacity-40"
+                    disabled={deletingId === a.id}
                   >
-                    Delete
+                    {deletingId === a.id ? 'Deleting...' : 'Delete'}
                   </button>
                 </td>
               </tr>
@@ -344,10 +314,6 @@ const ArticlesSection = () => {
               </button>
             </div>
 
-            {error && (
-              <div className="mb-3 text-sm text-red-600">{error}</div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -363,157 +329,86 @@ const ArticlesSection = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Slug (auto or edit)
+                  Author
                 </label>
                 <input
                   type="text"
-                  value={editing.slug}
-                  onChange={(e) => handleField('slug', slugify(e.target.value))}
+                  value={editing.author}
+                  onChange={(e) => handleField('author', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
-                  placeholder="auto-generated"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Category
-                </label>
-                <input
-                  type="text"
-                  value={editing.category}
-                  onChange={(e) => handleField('category', e.target.value)}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="Category"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Tags (comma separated)
-                </label>
-                <input
-                  type="text"
-                  value={editing.tags.join(', ')}
-                  onChange={(e) => handleTagsChange(e.target.value)}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="tag1, tag2"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Read Time (min)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={editing.readTime}
-                  onChange={(e) => handleField('readTime', Number(e.target.value))}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="5"
+                  placeholder="Author name"
                 />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Excerpt
+                  Description
                 </label>
                 <textarea
-                  value={editing.excerpt}
-                  onChange={(e) => handleField('excerpt', e.target.value)}
-                  rows={2}
+                  rows={3}
+                  value={editing.description}
+                  onChange={(e) => handleField('description', e.target.value)}
                   className="w-full px-3 py-2 border rounded resize-none"
-                  placeholder="Short summary..."
+                  placeholder="Short summary"
                 />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Content
+                  Content (HTML allowed)
                 </label>
                 <textarea
+                  rows={8}
                   value={editing.content}
                   onChange={(e) => handleField('content', e.target.value)}
-                  rows={6}
                   className="w-full px-3 py-2 border rounded"
-                  placeholder="Full article content..."
+                  placeholder="<p>Full article content...</p>"
                 />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Image URL
+                  Image (picPath)
                 </label>
-                <div className="flex gap-4 flex-wrap items-start">
-                  <div>
-                    <input
-                      type="text"
-                      value={editing.imageUrl}
-                      onChange={(e) => handleField('imageUrl', e.target.value)}
-                      className="w-72 px-3 py-2 border rounded mb-2"
-                      placeholder="https://..."
-                    />
+                <input
+                  type="text"
+                  value={editing.picPath}
+                  onChange={(e) => handleField('picPath', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="https://... or /carousal/xyz.webp"
+                />
+                <div className="flex items-center gap-3 mt-2">
+                  <label className="inline-flex items-center px-3 py-2 bg-neutral-200 hover:bg-neutral-300 text-xs rounded cursor-pointer">
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleImageFile(e.target.files?.[0] || null)}
-                      className="text-xs"
-                      disabled={saving}
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        try {
+                          const path = await uploadFile({ file, token, base: API_BASE });
+                          handleField('picPath', path);
+                          toast.success('Image uploaded', { className:'toast-shell', progressClassName:'toast-progress-green' });
+                        } catch (err) {
+                          toast.error(err.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
+                        } finally {
+                          setUploading(false);
+                          e.target.value = '';
+                        }
+                      }}
                     />
-                    <p className="text-[10px] text-gray-500 mt-1">
-                      Paste URL or upload file.
-                    </p>
-                  </div>
-                  {editing.imageUrl && (
-                    <img
-                      src={editing.imageUrl}
-                      alt="preview"
-                      className="h-24 w-32 object-cover rounded border"
-                    />
+                    {uploading ? 'Uploading…' : 'Upload Image'}
+                  </label>
+                  {editing.picPath && (
+                    <span className="text-[10px] text-green-600 break-all">{editing.picPath}</span>
                   )}
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Meta Title
-                </label>
-                <input
-                  type="text"
-                  value={editing.metaTitle}
-                  onChange={(e) => handleField('metaTitle', e.target.value)}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="SEO title"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Meta Description
-                </label>
-                <textarea
-                  value={editing.metaDescription}
-                  onChange={(e) => handleField('metaDescription', e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border rounded resize-none"
-                  placeholder="SEO description"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Order
-                </label>
-                <input
-                  type="number"
-                  value={editing.order}
-                  onChange={(e) => handleField('order', Number(e.target.value))}
-                  className="w-full px-3 py-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Status
-                </label>
-                <select
-                  value={editing.status}
-                  onChange={(e) => handleField('status', e.target.value)}
-                  className="w-full px-3 py-2 border rounded"
-                >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                </select>
+                {editing.picPath && (
+                  <img
+                    src={buildImageUrl(editing.picPath)}
+                    alt="preview"
+                    className="h-24 w-32 object-cover rounded border mt-3"
+                  />
+                )}
               </div>
             </div>
 
@@ -536,7 +431,6 @@ const ArticlesSection = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

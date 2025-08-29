@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
-// Adjust to real backend base (examples from Postman screenshot)
-const API_BASE = '/api/v1/carousal/home/..'; // replace with actual
-const REVIEWS_BASE = '/api/v1/reviews';      // e.g. https://meinhouse-backend.onrender.com/api/v1/reviews
+const API_ROOT = (process.env.REACT_APP_API_URL || '').replace(/\/+$/, ''); // from .env
 
 const emptyReview = () => ({
   id: null,
@@ -14,127 +14,104 @@ const emptyReview = () => ({
 });
 
 const TestimonialsSection = () => {
+  const token = useSelector(s => s.auth.accessToken);
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [fetchError, setFetchError] = useState('');
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
-  // -------- API STUBS (uncomment & adapt) ----------
+  // ---- API calls ----
   const fetchReviews = async () => {
     setLoading(true);
-    setError('');
+    setFetchError('');
     try {
-      // const res = await fetch(`${REVIEWS_BASE}/client`); // adjust endpoint (Get all client reviews)
-      // if(!res.ok) throw new Error('Failed to fetch reviews');
-      // const json = await res.json();
-      // setReviews(json?.data?.reviews || []);
-      // TEMP seed (remove later)
-      setReviews([
-        {
-          id: '1',
-          rating: '4.6',
-          review: 'Awesome',
-          name: 'Manikumar',
-          company: 'Abc',
-          country: 'India',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          rating: '4.5',
-            review: 'Great place',
-            name: 'Arul',
-            company: 'Abc',
-            country: 'India',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-      ]);
+      const res = await fetch(`${API_ROOT}/client-reviews`, { headers: { ...authHeader } });
+      const data = await res.json().catch(()=>({}));
+      if (!res.ok || !data.success) throw new Error(data.message || `Fetch failed (${res.status})`);
+      setReviews(data.data?.reviews || []);
     } catch (e) {
-      setError(e.message);
+      setFetchError(e.message);
+      toast.error(e.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
     } finally {
       setLoading(false);
     }
   };
 
   const createReview = async (payload) => {
-    // const res = await fetch(`${REVIEWS_BASE}/create`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    //   body: JSON.stringify(payload)
-    // });
-    // if(!res.ok) throw new Error('Create failed');
-    // const json = await res.json();
-    // return json.data.review; // adapt to real response
-    return {
-      ...payload,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    const res = await fetch(`${API_ROOT}/client-reviews`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', ...authHeader },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Create failed (${res.status})`);
+    // backend might not return review object; refetch instead
+    return data.data?.review || null;
   };
 
   const updateReviewApi = async (id, payload) => {
-    // const res = await fetch(`${REVIEWS_BASE}/update/${id}`, { method:'PUT', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`}, body: JSON.stringify(payload) });
-    // if(!res.ok) throw new Error('Update failed');
-    // const json = await res.json();
-    // return json.data.review;
-    return { ...payload, id, updatedAt: new Date().toISOString(), createdAt: payload.createdAt || new Date().toISOString() };
+    const res = await fetch(`${API_ROOT}/client-reviews/${id}`, {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json', ...authHeader },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Update failed (${res.status})`);
+    return data.data?.review || null;
   };
 
   const deleteReviewApi = async (id) => {
-    // const res = await fetch(`${REVIEWS_BASE}/delete/${id}`, { method:'DELETE', headers:{ Authorization: `Bearer ${token}` }});
-    // if(!res.ok) throw new Error('Delete failed');
+    const res = await fetch(`${API_ROOT}/client-reviews/${id}`, {
+      method:'DELETE',
+      headers:{ ...authHeader }
+    });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Delete failed (${res.status})`);
     return true;
   };
-  // --------------------------------------------------
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
+  useEffect(() => { fetchReviews(); }, []);
 
   const filtered = reviews.filter(r => {
     const q = search.toLowerCase();
     return (
-      r.name.toLowerCase().includes(q) ||
-      r.review.toLowerCase().includes(q) ||
+      r.name?.toLowerCase().includes(q) ||
+      r.review?.toLowerCase().includes(q) ||
       (r.company || '').toLowerCase().includes(q) ||
       (r.country || '').toLowerCase().includes(q)
     );
   });
 
+  // ---- Modal handlers ----
   const openCreate = () => {
     setEditing(emptyReview());
     setShowModal(true);
-    setError('');
   };
-
   const openEdit = (rev) => {
     setEditing({ ...rev });
     setShowModal(true);
-    setError('');
   };
-
   const closeModal = () => {
     if (saving) return;
     setShowModal(false);
     setEditing(null);
-    setError('');
   };
-
   const handleField = (field, value) => {
     setEditing(prev => ({ ...prev, [field]: value }));
   };
 
   const validate = (rev) => {
-    if (!rev.name) return 'Name required';
-    if (!rev.review) return 'Review text required';
-    if (!rev.rating) return 'Rating required';
-    if (Number(rev.rating) < 0 || Number(rev.rating) > 5) return 'Rating must be 0 - 5';
+    if (!rev.name.trim()) return 'Name required';
+    if (!rev.review.trim()) return 'Review text required';
+    if (rev.rating === '') return 'Rating required';
+    const num = Number(rev.rating);
+    if (Number.isNaN(num) || num < 0 || num > 5) return 'Rating must be 0 - 5';
     return '';
   };
 
@@ -142,23 +119,35 @@ const TestimonialsSection = () => {
     if (!editing) return;
     const v = validate(editing);
     if (v) {
-      setError(v);
+      toast.error(v, { className:'toast-shell', progressClassName:'toast-progress-red' });
       return;
     }
     setSaving(true);
-    setError('');
     try {
-      let saved;
+      const payload = {
+        rating: editing.rating.toString(),
+        review: editing.review,
+        name: editing.name,
+        company: editing.company,
+        country: editing.country
+      };
       if (editing.id) {
-        saved = await updateReviewApi(editing.id, editing);
-        setReviews(prev => prev.map(r => (r.id === saved.id ? saved : r)));
+        const updated = await updateReviewApi(editing.id, payload);
+        if (updated) {
+          setReviews(prev => prev.map(r => r.id === editing.id ? { ...r, ...updated } : r));
+        } else {
+          fetchReviews();
+        }
+        toast.success('Review updated', { className:'toast-shell', progressClassName:'toast-progress-green' });
       } else {
-        saved = await createReview(editing);
-        setReviews(prev => [saved, ...prev]);
+        const created = await createReview(payload);
+        if (created) setReviews(prev => [created, ...prev]);
+        else fetchReviews();
+        toast.success('Review created', { className:'toast-shell', progressClassName:'toast-progress-green' });
       }
       closeModal();
     } catch (e) {
-      setError(e.message);
+      toast.error(e.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
     } finally {
       setSaving(false);
     }
@@ -166,11 +155,15 @@ const TestimonialsSection = () => {
 
   const deleteReview = async (id) => {
     if (!window.confirm('Delete this review?')) return;
+    setDeletingId(id);
     try {
       await deleteReviewApi(id);
       setReviews(prev => prev.filter(r => r.id !== id));
+      toast.success('Deleted', { className:'toast-shell', progressClassName:'toast-progress-green' });
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -189,7 +182,7 @@ const TestimonialsSection = () => {
             onChange={e => setSearch(e.target.value)}
             className="border rounded px-3 py-2 w-60"
           />
-          <button
+            <button
             onClick={openCreate}
             className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
           >
@@ -198,9 +191,7 @@ const TestimonialsSection = () => {
         </div>
       </div>
 
-      {error && !showModal && (
-        <div className="text-sm text-red-600">{error}</div>
-      )}
+      {fetchError && <div className="text-sm text-red-600">{fetchError}</div>}
 
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="min-w-full text-sm">
@@ -219,16 +210,12 @@ const TestimonialsSection = () => {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
-                  Loading...
-                </td>
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">Loading...</td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
-                  No reviews
-                </td>
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">No reviews</td>
               </tr>
             )}
             {filtered.map((r, idx) => (
@@ -244,7 +231,7 @@ const TestimonialsSection = () => {
                 </td>
                 <td className="px-4 py-2 align-top max-w-xs">
                   <span className="text-gray-700">
-                    {r.review.length > 60 ? r.review.slice(0, 60) + '...' : r.review}
+                    {r.review?.length > 60 ? r.review.slice(0, 60) + '...' : r.review}
                   </span>
                 </td>
                 <td className="px-4 py-2 align-top text-xs text-gray-500">
@@ -259,9 +246,10 @@ const TestimonialsSection = () => {
                   </button>
                   <button
                     onClick={() => deleteReview(r.id)}
-                    className="text-red-600 hover:text-red-800 text-xs font-medium"
+                    className="text-red-600 hover:text-red-800 text-xs font-medium disabled:opacity-40"
+                    disabled={deletingId === r.id}
                   >
-                    Delete
+                    {deletingId === r.id ? 'Deleting...' : 'Delete'}
                   </button>
                 </td>
               </tr>
@@ -285,10 +273,6 @@ const TestimonialsSection = () => {
                 ✕
               </button>
             </div>
-
-            {error && (
-              <div className="mb-3 text-sm text-red-600">{error}</div>
-            )}
 
             <div className="space-y-4">
               <div>
@@ -324,7 +308,7 @@ const TestimonialsSection = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Rating (0 - 5, decimals ok)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Rating (0 - 5)</label>
                 <input
                   type="number"
                   step="0.01"

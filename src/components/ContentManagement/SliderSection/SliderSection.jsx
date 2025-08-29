@@ -1,142 +1,133 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { uploadFile } from '../../../../src/utils/uploadFile'; // adjust relative path if needed
 
-// Adjust if actual backend differs
-const API_BASE = '/api/home/carousal'; // endpoints: GET (list), POST (add), PUT /:id (update), DELETE /:id (delete)
-
-// Helper: convert file -> base64 (replace with real upload later)
-const fileToDataUrl = (file) =>
-  new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = e => res(e.target.result);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
+// Base API (normalized)
+const API_ROOT = (process.env.REACT_APP_API_URL || '').replace(/\/+$/, '');
+// Endpoints:
+// GET    /carousal/home
+// POST   /carousal/home          { imagePath, title }
+// PUT    /carousal/home/:id      { imagePath, title }
+// DELETE /carousal/home/:id
+//
+// NOTE: API returns imagePath (may be relative). Adjust buildImageUrl() if needed.
+const buildImageUrl = (p) => {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  // If backend serves absolute S3 URLs already, remove this line.
+  return `https://dev-carenest.s3.ap-south-1.amazonaws.com${p}`;
+};
 
 const emptyItem = () => ({
   id: null,
   title: '',
-  imageUrl: '',
-  isActive: true,
-  order: 0
+  imagePath: ''
 });
 
 const SliderSection = () => {
+  const token = useSelector(s => s.auth.accessToken);
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
   const [items, setItems] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [fetchError, setFetchError] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState(null); // current item
+  const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
-  // -------- API STUBS (uncomment & implement with real backend) ----------
+  // --- API calls ---
   const fetchItems = async () => {
     setLoading(true);
-    setError('');
+    setFetchError('');
     try {
-      // const res = await fetch(API_BASE);
-      // if(!res.ok) throw new Error('Failed to fetch');
-      // const data = await res.json();
-      // setItems(data);
-      // TEMP seed (remove)
-      const seed = [
-        { id: 1, title: 'Slider One', imageUrl: '/slider-1.jpg', isActive: true, order: 1 },
-        { id: 2, title: 'Slider Two', imageUrl: '/slider-2.jpg', isActive: false, order: 2 }
-      ];
-      setItems(seed);
+      const res = await fetch(`${API_ROOT}/carousal/home`, { headers: { ...authHeader } });
+      const data = await res.json().catch(()=> ({}));
+      if (!res.ok || !data.success) throw new Error(data.message || `Fetch failed (${res.status})`);
+      const list = data.data?.carousals || [];
+      setItems(list);
     } catch (e) {
-      setError(e.message);
+      setFetchError(e.message);
+      toast.error(e.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
     } finally {
       setLoading(false);
     }
   };
 
   const createItem = async (payload) => {
-    // const res = await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    // if(!res.ok) throw new Error('Create failed');
-    // return await res.json();
-    return { ...payload, id: Date.now() }; // mock
+    const res = await fetch(`${API_ROOT}/carousal/home`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', ...authHeader },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Create failed (${res.status})`);
+    return data.data; // backend may or may not echo object; adjust if needed
   };
 
   const updateItemApi = async (id, payload) => {
-    // const res = await fetch(`${API_BASE}/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    // if(!res.ok) throw new Error('Update failed');
-    // return await res.json();
-    return { ...payload, id }; // mock
+    const res = await fetch(`${API_ROOT}/carousal/home/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type':'application/json', ...authHeader },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Update failed (${res.status})`);
+    return data.data;
   };
 
   const deleteItemApi = async (id) => {
-    // const res = await fetch(`${API_BASE}/${id}`,{method:'DELETE'});
-    // if(!res.ok) throw new Error('Delete failed');
+    const res = await fetch(`${API_ROOT}/carousal/home/${id}`, {
+      method: 'DELETE',
+      headers: { ...authHeader }
+    });
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.success) throw new Error(data.message || `Delete failed (${res.status})`);
     return true;
   };
-  // ----------------------------------------------------------------------
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  useEffect(() => { fetchItems(); }, []); // initial load
 
   useEffect(() => {
     const s = search.toLowerCase();
     setFiltered(
-      items
-        .filter(i => i.title.toLowerCase().includes(s))
-        .sort((a, b) => a.order - b.order)
+      items.filter(i => i.title?.toLowerCase().includes(s))
     );
   }, [items, search]);
 
   const openCreate = () => {
-    setEditing({ ...emptyItem(), order: (items.length ? Math.max(...items.map(i => i.order)) + 1 : 1) });
+    setEditing(emptyItem());
     setShowModal(true);
   };
-
-  const openEdit = (item) => {
-    setEditing({ ...item });
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    if (saving) return;
-    setShowModal(false);
-    setEditing(null);
-    setError('');
-  };
-
-  const handleField = (field, value) => {
-    setEditing(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleImageFile = async (file) => {
-    if (!file) return;
-    const url = await fileToDataUrl(file);
-    handleField('imageUrl', url);
-  };
+  const openEdit = (item) => { setEditing({ ...item }); setShowModal(true); };
+  const closeModal = () => { if (saving) return; setShowModal(false); setEditing(null); };
 
   const saveItem = async () => {
     if (!editing) return;
-    if (!editing.title) {
-      setError('Title is required');
+    if (!editing.title.trim()) {
+      toast.error('Title required', { className:'toast-shell', progressClassName:'toast-progress-red' });
       return;
     }
-    if (!editing.imageUrl) {
-      setError('Image is required');
+    if (!editing.imagePath.trim()) {
+      toast.error('Image URL required', { className:'toast-shell', progressClassName:'toast-progress-red' });
       return;
     }
     setSaving(true);
-    setError('');
     try {
-      let saved;
       if (editing.id) {
-        saved = await updateItemApi(editing.id, editing);
-        setItems(prev => prev.map(i => (i.id === saved.id ? saved : i)));
+        await updateItemApi(editing.id, { title: editing.title.trim(), imagePath: editing.imagePath.trim() });
+        toast.success('Slide updated', { className:'toast-shell', progressClassName:'toast-progress-green' });
       } else {
-        saved = await createItem(editing);
-        setItems(prev => [...prev, saved]);
+        await createItem({ title: editing.title.trim(), imagePath: editing.imagePath.trim() });
+        toast.success('Slide added', { className:'toast-shell', progressClassName:'toast-progress-green' });
       }
       closeModal();
+      fetchItems(); // refresh list
     } catch (e) {
-      setError(e.message);
+      toast.error(e.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
     } finally {
       setSaving(false);
     }
@@ -144,29 +135,16 @@ const SliderSection = () => {
 
   const deleteItem = async (id) => {
     if (!window.confirm('Delete this slide?')) return;
+    setDeletingId(id);
     try {
       await deleteItemApi(id);
       setItems(prev => prev.filter(i => i.id !== id));
+      toast.success('Deleted', { className:'toast-shell', progressClassName:'toast-progress-green' });
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
+    } finally {
+      setDeletingId(null);
     }
-  };
-
-  const toggleActive = (id) => {
-    setItems(prev =>
-      prev.map(i =>
-        i.id === id ? { ...i, isActive: !i.isActive } : i
-      )
-    );
-  };
-
-  const setOrder = (id, value) => {
-    const num = Number(value) || 0;
-    setItems(prev =>
-      prev
-        .map(i => (i.id === id ? { ...i, order: num } : i))
-        .sort((a, b) => a.order - b.order)
-    );
   };
 
   return (
@@ -174,15 +152,13 @@ const SliderSection = () => {
       <h2 className="text-2xl font-bold mb-6">Slider Section</h2>
 
       <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Search slides..."
+        <input
+          type="text"
+          placeholder="Search slides..."
             className="border rounded px-3 py-2 w-64"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
         <button
           className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
           onClick={openCreate}
@@ -191,7 +167,7 @@ const SliderSection = () => {
         </button>
       </div>
 
-      {error && !showModal && <div className="text-sm text-red-600 mb-4">{error}</div>}
+      {fetchError && <div className="text-sm text-red-600 mb-4">{fetchError}</div>}
 
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="min-w-full">
@@ -200,22 +176,20 @@ const SliderSection = () => {
               <th className="px-4 py-2 w-12">#</th>
               <th className="px-4 py-2">Image</th>
               <th className="px-4 py-2">Title</th>
-              <th className="px-4 py-2 text-center">Order</th>
-              <th className="px-4 py-2 text-center">Active</th>
               <th className="px-4 py-2 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
+                <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
+                <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
                   No slides found.
                 </td>
               </tr>
@@ -224,37 +198,17 @@ const SliderSection = () => {
               <tr key={slide.id} className="border-t">
                 <td className="px-4 py-2 align-top">{idx + 1}</td>
                 <td className="px-4 py-2 align-top">
-                  {slide.imageUrl ? (
+                  {slide.imagePath ? (
                     <img
-                      src={slide.imageUrl}
+                      src={buildImageUrl(slide.imagePath)}
                       alt={slide.title}
-                      className="w-24 h-14 object-cover rounded border"
+                      className="w-28 h-16 object-cover rounded border"
                     />
                   ) : (
                     <span className="text-xs text-gray-400">No image</span>
                   )}
                 </td>
                 <td className="px-4 py-2 align-top">{slide.title}</td>
-                <td className="px-4 py-2 align-top text-center">
-                  <input
-                    type="number"
-                    className="w-16 px-2 py-1 border rounded text-center"
-                    value={slide.order}
-                    onChange={(e) => setOrder(slide.id, e.target.value)}
-                  />
-                </td>
-                <td className="px-4 py-2 align-top text-center">
-                  <button
-                    onClick={() => toggleActive(slide.id)}
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      slide.isActive
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {slide.isActive ? 'Active' : 'Inactive'}
-                  </button>
-                </td>
                 <td className="px-4 py-2 align-top text-center space-x-2">
                   <button
                     className="text-blue-600 hover:text-blue-800 text-xs font-medium"
@@ -263,10 +217,11 @@ const SliderSection = () => {
                     Edit
                   </button>
                   <button
-                    className="text-red-600 hover:text-red-800 text-xs font-medium"
+                    className="text-red-600 hover:text-red-800 text-xs font-medium disabled:opacity-40"
                     onClick={() => deleteItem(slide.id)}
+                    disabled={deletingId === slide.id}
                   >
-                    Delete
+                    {deletingId === slide.id ? 'Deleting...' : 'Delete'}
                   </button>
                 </td>
               </tr>
@@ -277,116 +232,102 @@ const SliderSection = () => {
 
       {showModal && editing && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center overflow-y-auto p-6">
-            <div className="bg-white w-full max-w-xl rounded-lg shadow-lg p-6 relative">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">
-                  {editing.id ? 'Edit Slide' : 'Add Slide'}
-                </h3>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-500 hover:text-gray-800"
-                  disabled={saving}
-                >
-                  ✕
-                </button>
+          <div className="bg-white w-full max-w-xl rounded-lg shadow-lg p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">
+                {editing.id ? 'Edit Slide' : 'Add Slide'}
+              </h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-800"
+                disabled={saving}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={editing.title}
+                  onChange={(e) => setEditing(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="Slide title"
+                />
               </div>
 
-              {error && (
-                <div className="mb-3 text-sm text-red-600">{error}</div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Title
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Image URL (imagePath)
+                </label>
+                <input
+                  type="text"
+                  value={editing.imagePath}
+                  onChange={(e) => setEditing(prev => ({ ...prev, imagePath: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded mb-2"
+                  placeholder="https://... or /carousal/xyz.webp"
+                />
+                <div className="flex items-center gap-3 mb-2">
+                  <label className="inline-flex items-center px-3 py-2 bg-neutral-200 hover:bg-neutral-300 text-xs rounded cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        try {
+                          const path = await uploadFile({ file, token, base: API_ROOT });
+                          setEditing(prev => ({ ...prev, imagePath: path }));
+                          toast.success('Image uploaded', { className:'toast-shell', progressClassName:'toast-progress-green' });
+                        } catch (err) {
+                          toast.error(err.message, { className:'toast-shell', progressClassName:'toast-progress-red' });
+                        } finally {
+                          setUploading(false);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                    {uploading ? 'Uploading…' : 'Upload Image'}
                   </label>
-                  <input
-                    type="text"
-                    value={editing.title}
-                    onChange={(e) => handleField('title', e.target.value)}
-                    className="w-full px-3 py-2 border rounded"
-                    placeholder="Slide title"
+                  {editing.imagePath && (
+                    <span className="text-[10px] text-green-600 break-all">
+                      {editing.imagePath}
+                    </span>
+                  )}
+                </div>
+                {editing.imagePath && (
+                  <img
+                    src={buildImageUrl(editing.imagePath)}
+                    alt="preview"
+                    className="h-24 w-44 object-cover rounded border mt-2"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Order
-                  </label>
-                  <input
-                    type="number"
-                    value={editing.order}
-                    onChange={(e) => handleField('order', Number(e.target.value))}
-                    className="w-32 px-3 py-2 border rounded"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={editing.isActive ? 'active' : 'inactive'}
-                    onChange={(e) => handleField('isActive', e.target.value === 'active')}
-                    className="w-40 px-3 py-2 border rounded"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Image URL
-                  </label>
-                  <div className="flex gap-4 flex-wrap items-start">
-                    <div>
-                      <input
-                        type="text"
-                        value={editing.imageUrl}
-                        onChange={(e) => handleField('imageUrl', e.target.value)}
-                        className="w-72 px-3 py-2 border rounded mb-2"
-                        placeholder="https://..."
-                      />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageFile(e.target.files?.[0] || null)}
-                        className="text-xs"
-                        disabled={saving}
-                      />
-                      <p className="text-[10px] text-gray-500 mt-1">
-                        Paste URL or upload file.
-                      </p>
-                    </div>
-                    {editing.imageUrl && (
-                      <img
-                        src={editing.imageUrl}
-                        alt="preview"
-                        className="h-24 w-40 object-cover rounded border"
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2 rounded border text-gray-700 hover:bg-gray-50"
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={saveItem}
-                  className="px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
-                  disabled={saving}
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </button>
+                )}
               </div>
             </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 rounded border text-gray-700 hover:bg-gray-50"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveItem}
+                className="px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
