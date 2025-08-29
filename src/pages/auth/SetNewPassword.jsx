@@ -52,8 +52,21 @@ const SetNewPassword = () => {
       toast.error('Weak password (need upper, lower, number, symbol, 8+ chars)', { className:'toast-shell', progressClassName:'toast-progress-red' });
       return;
     }
+    if (!token) {
+      toast.error('Missing token', { className:'toast-shell', progressClassName:'toast-progress-red' });
+      return;
+    }
+
+    console.log('Reset payload -> token:', token.slice(0,8)+'...', 'pwdLen:', form.password.length);
+
+    // Correct payload (backend needs newPassword)
     resetPassword({ token, newPassword: form.password });
+
+    // If server ALSO accepts "password" and ignores extra keys you can send both:
+    // resetPassword({ token, newPassword: form.password, password: form.password });
   };
+
+  const disableInputs = resetting || validating || invalid; // <— simplified
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
@@ -61,7 +74,7 @@ const SetNewPassword = () => {
       <div className="flex items-center justify-center p-10 bg-white">
         <div className="w-full max-w-md">
           <h1 className="text-3xl font-semibold mb-2">Set A New Password</h1>
-            <p className="text-sm text-gray-500 mb-8">Please enter your new password.</p>
+          <p className="text-sm text-gray-500 mb-8">Please enter your new password.</p>
 
           <form onSubmit={submit} className="space-y-5">
             {/* Email (display only) */}
@@ -71,12 +84,14 @@ const SetNewPassword = () => {
               </div>
               <input
                 type="email"
-                disabled
                 value={form.email}
                 placeholder="Mail ID"
+                disabled
+                readOnly
                 className="w-full pl-12 pr-4 py-3 rounded-md bg-gray-100 text-sm border border-transparent"
               />
             </div>
+
             {/* New Password */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -87,19 +102,22 @@ const SetNewPassword = () => {
                 value={form.password}
                 onChange={e=>setForm(f=>({...f,password:e.target.value}))}
                 placeholder="New Password"
-                className="w-full pl-12 pr-12 py-3 rounded-md bg-gray-100 focus:bg-white border focus:border-gray-300 focus:ring-0 text-sm"
-                disabled={resetting || validating || invalid || !valid}
+                className="w-full pl-12 pr-12 py-3 rounded-md bg-gray-100 focus:bg-white border focus:border-gray-300 focus:ring-0 text-sm disabled:opacity-60"
+                disabled={disableInputs}
                 required
+                aria-disabled={disableInputs}
               />
               <button
                 type="button"
                 onClick={()=>setShowPwd(s=>!s)}
                 className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 text-xs"
-                tabIndex={-1}
+                tabIndex={disableInputs ? -1 : 0}
+                disabled={disableInputs}
               >
                 {showPwd ? 'Hide':'Show'}
               </button>
             </div>
+
             {/* Confirm Password */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -110,15 +128,17 @@ const SetNewPassword = () => {
                 value={form.confirm}
                 onChange={e=>setForm(f=>({...f,confirm:e.target.value}))}
                 placeholder="Confirm Password"
-                className="w-full pl-12 pr-12 py-3 rounded-md bg-gray-100 focus:bg-white border focus:border-gray-300 focus:ring-0 text-sm"
-                disabled={resetting || validating || invalid || !valid}
+                className="w-full pl-12 pr-12 py-3 rounded-md bg-gray-100 focus:bg-white border focus:border-gray-300 focus:ring-0 text-sm disabled:opacity-60"
+                disabled={disableInputs}
                 required
+                aria-disabled={disableInputs}
               />
               <button
                 type="button"
                 onClick={()=>setShowPwd2(s=>!s)}
                 className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 text-xs"
-                tabIndex={-1}
+                tabIndex={disableInputs ? -1 : 0}
+                disabled={disableInputs}
               >
                 {showPwd2 ? 'Hide':'Show'}
               </button>
@@ -126,7 +146,7 @@ const SetNewPassword = () => {
 
             <button
               type="submit"
-              disabled={!valid || resetting}
+              disabled={resetting || invalid || validating}
               className="w-full bg-neutral-900 hover:bg-neutral-800 text-white py-3 rounded-md text-sm font-semibold disabled:opacity-60"
             >
               {resetting ? 'Saving…' : 'Reset Password'}

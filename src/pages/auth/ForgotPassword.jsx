@@ -120,15 +120,6 @@ const ForgotPassword = () => {
             {isSuccess && !error && (
               <div className="mt-6 p-4 border border-orange-300 rounded-lg bg-orange-50">
                 <p className="text-sm text-gray-700">{data.message}</p>
-                <div className="mt-4 text-center">
-                  <button
-                    type="button"
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                    onClick={() => navigate('/auth/set-new-password')}
-                  >
-                    Continue to Set New Password
-                  </button>
-                </div>
               </div>
             )}
 
