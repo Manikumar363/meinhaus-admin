@@ -3,17 +3,13 @@ import axios from "axios";
 
 // Read your actual env variable names (URL vs BASE) + optional override endpoints
 const API_BASE =
-  process.env.REACT_APP_API_URL || // your .env
+  process.env.REACT_APP_API_URL ||
   process.env.REACT_APP_API_BASE ||
   "";
 const EDU_FETCH_ENDPOINT =
-  process.env.REACT_APP_EDU_FETCH_ENDPOINT || "/education"; // change if real path differs
+  process.env.REACT_APP_EDU_FETCH_ENDPOINT || "/education";
 const EDU_UPDATE_ENDPOINT =
   process.env.REACT_APP_EDU_UPDATE_ENDPOINT || "/education";
-
-const EDU_EMAIL = process.env.REACT_APP_EDU_FETCH_EMAIL || "";
-const EDU_PASSWORD = process.env.REACT_APP_EDU_FETCH_PASSWORD || "";
-const EDU_ROLE = process.env.REACT_APP_EDU_FETCH_ROLE || "";
 
 // TEMP fallback (remove when envs confirmed)
 const fb = (v, d) => (v ? v : d);
@@ -44,11 +40,8 @@ export default function EducationPageSection() {
   const missingEnv = useMemo(() => {
     const list = [];
     if (!API_BASE) list.push("REACT_APP_API_URL");
-    if (!EDU_EMAIL) list.push("REACT_APP_EDU_FETCH_EMAIL");
-    if (!EDU_PASSWORD) list.push("REACT_APP_EDU_FETCH_PASSWORD");
-    if (!EDU_ROLE) list.push("REACT_APP_EDU_FETCH_ROLE");
     return list;
-  }, []);
+  }, []); // was [API_BASE]
 
   const api = axios.create({
     baseURL: baseUrl,

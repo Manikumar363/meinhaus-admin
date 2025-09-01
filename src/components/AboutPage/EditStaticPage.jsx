@@ -1,107 +1,123 @@
 // Inline edit component (no routing) expects props: page, onSave(updatedPage), onCancel()
-import { useEffect, useState, useRef } from "react";
-import * as Inputs from "../common/Inputs";
-import { LoadingSpinner } from "../common/LoadingSpinner";
+import { useEffect, useState } from "react";
 import "react-quill/dist/quill.snow.css";
 
-const CustomInput = Inputs.CustomInput;
-const CustomSelect = Inputs.CustomSelect;
-const CustomButton = Inputs.CustomButton;
-
+let ReactQuill;
 const quillModules = {
   toolbar: [
     [{ header: [1, 2, 3, false] }],
-    [{ font: [] }],
     ["bold", "italic", "underline", "strike"],
-    [{ script: "sub" }, { script: "super" }],
-    [{ color: [] }, { background: [] }],
     [{ list: "ordered" }, { list: "bullet" }],
     [{ align: [] }],
-    ["blockquote", "code-block"],
-    ["link", "image", "video"],
-    ["clean"],
+    ["link", "image", "clean"],
   ],
 };
 const quillFormats = [
-  "header","font","bold","italic","underline","strike","script",
-  "color","background","list","bullet","align","blockquote",
-  "code-block","link","image","video"
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "list",
+  "bullet",
+  "align",
+  "link",
+  "image",
 ];
 
-let ReactQuill; // loaded once
-
-const EditStaticPage = ({ page, onCancel, onSave }) => {
+const EditStaticPage = ({ page, creating, onCancel, onSave, saving }) => {
   const [title, setTitle] = useState(page?.title || "");
-  const [status, setStatus] = useState(page?.status || "Active");
-  const [description, setDescription] = useState(page?.description || "");
-  const [saving, setSaving] = useState(false);
-  const [, force] = useState(0);
+  const [status, setStatus] = useState(page?.status || "active");
+  const [content, setContent] = useState(page?.content || "");
+  const [ready, setReady] = useState(false);
+  const isNew = !page?.id;
 
   useEffect(() => {
     (async () => {
       if (!ReactQuill) {
         const mod = await import("react-quill");
         ReactQuill = mod.default;
-        force((n) => n + 1);
       }
+      setReady(true);
     })();
   }, []);
 
-  const handleSave = () => {
-    setSaving(true);
-    setTimeout(() => {
-      onSave({ ...page, title, status, description });
-      setSaving(false);
-    }, 150);
-  };
-
-  if (!page) return <div className="p-6">Not found</div>;
+  const disabledTitle = !isNew; // title immutable after create (per typical policy)
+  const valid = title.trim() && content.trim();
 
   return (
-    <div className="main-container bg-[#ffff] p-6 rounded-md">
-      <h2 className="text-xl font-semibold mb-6">Edit Static Page</h2>
+    <div className="main-container bg-white p-6 rounded-md">
+      <h2 className="text-xl font-semibold mb-6">
+        {creating ? "Create Page" : "Edit Page"}
+      </h2>
 
-      <div className="input-container mb-5">
-        <div className="label mb-1">Title</div>
-        <div className="user-input">
-          <CustomInput text={title} setText={setTitle} disabled />
-        </div>
+      <div className="mb-5">
+        <label className="block text-sm font-medium mb-1">Title</label>
+        <input
+          className="w-full border rounded px-3 py-2 text-sm disabled:bg-gray-100"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          disabled={disabledTitle}
+          placeholder="Page title"
+        />
       </div>
 
-      <div className="input-container mb-5">
-        <div className="label mb-1">Description</div>
-        <div className="user-input bg-white text-black rounded">
-          {ReactQuill ? (
+      <div className="mb-5">
+        <label className="block text-sm font-medium mb-1">Content</label>
+        <div className="border rounded">
+          {ready ? (
             <ReactQuill
-              theme="snow"
-              value={description}
-              onChange={setDescription}
+              value={content}
+              onChange={setContent}
               modules={quillModules}
               formats={quillFormats}
               className="min-h-[260px]"
             />
           ) : (
-            <div className="p-3 text-sm flex items-center gap-2">
-              <LoadingSpinner size={20} /> Loading editor...
-            </div>
+            <div className="p-3 text-sm">Loading editor…</div>
           )}
         </div>
       </div>
 
-      <div className="input-container mb-6">
-        <div className="label mb-1">Status</div>
-        <div className="user-input">
-          <CustomSelect menu={["Active","Inactive"]} value={status} onChange={setStatus} />
-        </div>
+      <div className="mb-6">
+        <label className="block text-sm font-medium mb-1">Status</label>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="border rounded px-3 py-2 text-sm"
+        >
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
 
       <div className="flex gap-3">
-        <CustomButton className="purple-button" handleClick={handleSave} disabled={saving}>
-          {saving ? <LoadingSpinner /> : "Save"}
-        </CustomButton>
-        <CustomButton className="bg-gray-500 hover:bg-gray-600 text-white" handleClick={onCancel}>
+        <button
+          onClick={() =>
+            onSave({
+              ...page,
+              id: page?.id || null,
+              title: title.trim(),
+              content,
+              status,
+            })
+          }
+          disabled={!valid || saving}
+          className={`px-4 py-2 rounded text-white text-sm ${
+            !valid || saving
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 rounded border text-sm hover:bg-gray-50"
+          disabled={saving}
+        >
           Cancel
-        </CustomButton>
+        </button>
       </div>
     </div>
   );
