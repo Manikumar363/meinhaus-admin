@@ -39,6 +39,17 @@ const Dashboard = () => {
     { id: 'complimentary', label: 'Complimentary Services', icon: <ComplimentaryIcon className="w-3 h-3" />, component: <ComplimentarySection /> },
   ];
 
+  // Pick the active component (single wrapper so it can stretch full height)
+  let activeComponent = null;
+  if (activeMenu === 'content') {
+    activeComponent = contentPages.find(p => p.id === activeContentPage)?.component;
+  } else if (activeMenu === 'about') activeComponent = <AboutSection />;
+  else if (activeMenu === 'contact') activeComponent = <ContactUsSection />;
+  else if (activeMenu === 'education') activeComponent = <EducationSection />;
+  else if (activeMenu === 'gallery') activeComponent = <GallerySection />;
+  else if (activeMenu === 'complimentaryService') activeComponent = <ComplimentaryServicePage />;
+  else if (activeMenu === 'query') activeComponent = <QueryPage />;
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
@@ -218,9 +229,9 @@ const Dashboard = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <header className="bg-white shadow-sm border-b border-gray-200">
+      {/* Right side */}
+      <div className="flex flex-col flex-1 min-h-0">
+        <header className="bg-white shadow-sm border-b border-gray-200 shrink-0">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-4">
               <button className="text-gray-600 hover:text-gray-900">
@@ -317,46 +328,21 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-6">
-          <div className="flex justify-end">
-            <LogoutButton className="px-3 py-1 bg-red-600 text-white rounded" />
-          </div>
+        {/* Main area now flex so inner card can stretch to bottom */}
+        <main className="flex-1 flex flex-col min-h-0">
+          {/* Scroll container (padding here) */}
+            <div className="flex-1 overflow-auto p-6 flex flex-col min-h-0">
+              <div className="flex justify-end mb-4 shrink-0">
+                <LogoutButton className="px-3 py-1 bg-red-600 text-white rounded" />
+              </div>
 
-            {activeMenu === 'content' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                {contentPages.find((p) => p.id === activeContentPage)?.component}
+              {/* Stretch wrapper */}
+              <div className="flex-1 flex min-h-0">
+                <div className="bg-white rounded-lg shadow-sm p-6 flex-1 flex flex-col min-h-0">
+                  {activeComponent}
+                </div>
               </div>
-            )}
-            {activeMenu === 'about' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <AboutSection />
-              </div>
-            )}
-            {activeMenu === 'contact' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <ContactUsSection />
-              </div>
-            )}
-            {activeMenu === 'education' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <EducationSection />
-              </div>
-            )}
-            {activeMenu === 'gallery' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <GallerySection />
-              </div>
-            )}
-            {activeMenu === 'complimentaryService' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <ComplimentaryServicePage />
-              </div>
-            )}
-            {activeMenu === 'query' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <QueryPage />
-              </div>
-            )}
+            </div>
         </main>
       </div>
     </div>

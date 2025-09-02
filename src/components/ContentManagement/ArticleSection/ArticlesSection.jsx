@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { uploadFile } from '../../../../src/utils/uploadFile';
@@ -39,11 +39,13 @@ const ArticlesSection = () => {
   const [uploading, setUploading] = useState(false);
 
   // ---- API Calls ----
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     setFetchError('');
     try {
-      const res = await fetch(`${API_BASE}/article`, { headers: { ...authHeader } });
+      const res = await fetch(`${API_BASE}/article`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) throw new Error(data.message || `Fetch failed (${res.status})`);
       const list = data.data?.articles || [];
@@ -54,7 +56,7 @@ const ArticlesSection = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]); // was [API_BASE, authHeader]
 
   const fetchDetails = async (id) => {
     setViewingId(id);
@@ -116,7 +118,7 @@ const ArticlesSection = () => {
     return true;
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   // ---- Handlers ----
   const openCreate = () => {

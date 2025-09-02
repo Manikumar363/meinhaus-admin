@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import PhotoGallerySection from './PhotoGallerySection';
 import VideoGallerySection from './VideoGallerySection';
-import PortfolioSection from './PortfolioSection';
-import GallerySettingsSection from './GallerySettingsSection';
 
 const GalleryPageSection = () => {
   const [activeSection, setActiveSection] = useState('photo-gallery');

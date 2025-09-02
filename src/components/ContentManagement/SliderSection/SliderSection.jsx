@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { uploadFile } from '../../../../src/utils/uploadFile'; // adjust relative path if needed
@@ -40,11 +40,11 @@ const SliderSection = () => {
   const [uploading, setUploading] = useState(false);
 
   // --- API calls ---
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     setLoading(true);
     setFetchError('');
     try {
-      const res = await fetch(`${API_ROOT}/carousal/home`, { headers: { ...authHeader } });
+      const res = await fetch(`${API_ROOT}/carousal/home`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       const data = await res.json().catch(()=> ({}));
       if (!res.ok || !data.success) throw new Error(data.message || `Fetch failed (${res.status})`);
       const list = data.data?.carousals || [];
@@ -55,7 +55,7 @@ const SliderSection = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   const createItem = async (payload) => {
     const res = await fetch(`${API_ROOT}/carousal/home`, {
@@ -89,7 +89,7 @@ const SliderSection = () => {
     return true;
   };
 
-  useEffect(() => { fetchItems(); }, []); // initial load
+  useEffect(() => { fetchItems(); }, [fetchItems]); // initial load
 
   useEffect(() => {
     const s = search.toLowerCase();

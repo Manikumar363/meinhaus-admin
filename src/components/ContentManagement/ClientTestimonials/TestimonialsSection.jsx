@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
@@ -27,11 +27,13 @@ const TestimonialsSection = () => {
   const [deletingId, setDeletingId] = useState(null);
 
   // ---- API calls ----
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     setLoading(true);
     setFetchError('');
     try {
-      const res = await fetch(`${API_ROOT}/client-reviews`, { headers: { ...authHeader } });
+      const res = await fetch(`${API_ROOT}/client-reviews`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await res.json().catch(()=>({}));
       if (!res.ok || !data.success) throw new Error(data.message || `Fetch failed (${res.status})`);
       setReviews(data.data?.reviews || []);
@@ -41,7 +43,7 @@ const TestimonialsSection = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   const createReview = async (payload) => {
     const res = await fetch(`${API_ROOT}/client-reviews`, {
@@ -76,7 +78,7 @@ const TestimonialsSection = () => {
     return true;
   };
 
-  useEffect(() => { fetchReviews(); }, []);
+  useEffect(() => { fetchReviews(); }, [fetchReviews]); // was []
 
   const filtered = reviews.filter(r => {
     const q = search.toLowerCase();
