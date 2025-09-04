@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { fetchQueries, deleteQuery } from "../../stores/api/query/queries";
+import { EyeIcon, TrashIcon } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -58,6 +59,9 @@ export default function QueryPageSection() {
   const [token, setToken] = useState("");
   const [hasNext, setHasNext] = useState(true);
   const abortRef = useRef(null);
+  const [viewing, setViewing] = useState(null); // currently opened query for "View" dialog
+  const [pendingDelete, setPendingDelete] = useState(null); // query selected for deletion
+  const [deleting, setDeleting] = useState(false);
 
   // Try to get token immediately + poll briefly (covers async login)
   useEffect(() => {
@@ -132,15 +136,24 @@ export default function QueryPageSection() {
 
   const showingCount = filtered.length;
 
-  async function handleDelete(id) {
-    if (!window.confirm("Delete this query?")) return;
+  function requestDelete(q) {
+    setPendingDelete(q);
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    const id = pendingDelete.id;
     const prev = queries;
-    setQueries((qs) => qs.filter((q) => q.id !== id));
+    setQueries(qs => qs.filter(q => q.id !== id));
     try {
       await deleteQuery(id, token);
     } catch (e) {
       alert(`Delete failed: ${e.message}`);
       setQueries(prev);
+    } finally {
+      setDeleting(false);
+      setPendingDelete(null);
     }
   }
 
@@ -234,11 +247,17 @@ export default function QueryPageSection() {
                   <Td>{formatDate(q.createdAt)}</Td>
                   <Td>
                     <button
+                      className="text-blue-600 text-xs hover:underline mr-3"
+                      onClick={() => setViewing(q)}
+                    >
+                      <EyeIcon className="inline-block mr-1" size={18} />
+                    </button>
+                    <button
                       className="text-red-600 text-xs hover:underline"
-                      onClick={() => handleDelete(q.id)}
+                      onClick={() => requestDelete(q)}
                       disabled={loading}
                     >
-                      Delete
+                      <TrashIcon className="inline-block mr-1" size={18} />
                     </button>
                   </Td>
                 </tr>
@@ -266,6 +285,97 @@ export default function QueryPageSection() {
           Next
         </button>
       </div>
+
+      {viewing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full flex flex-col max-h-[90vh]">
+            <div className="px-5 py-4 border-b flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Query Details</h3>
+              <button
+                onClick={() => setViewing(null)}
+                className="text-gray-500 hover:text-gray-800 text-sm"
+                aria-label="Close dialog"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-5 space-y-4 overflow-auto text-sm">
+              <DetailRow label="Name" value={viewing.name} />
+              <DetailRow label="Email" value={viewing.email} />
+              <DetailRow label="Created" value={formatDate(viewing.createdAt)} />
+              <div>
+                <div className="font-medium mb-1">Message</div>
+                <div className="whitespace-pre-wrap break-words text-gray-700 border rounded p-3 bg-gray-50 max-h-72 overflow-auto">
+                  {viewing.message}
+                </div>
+              </div>
+            </div>
+            <div className="px-5 py-3 border-t flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  if (navigator?.clipboard) {
+                    navigator.clipboard.writeText(viewing.message || "");
+                  }
+                }}
+                className="px-3 py-1 text-xs rounded border bg-gray-50 hover:bg-gray-100"
+              >
+                Copy Message
+              </button>
+              <button
+                onClick={() => setViewing(null)}
+                className="px-4 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm">
+            <div className="px-5 py-4 border-b font-semibold text-sm">
+              Delete Query
+            </div>
+            <div className="px-5 py-4 text-sm text-gray-700 space-y-2">
+              <p>
+                Are you sure you want to delete this query
+                {pendingDelete.name ? (
+                  <> from <span className="font-medium">{pendingDelete.name}</span>?</>
+                ) : "?"}
+              </p>
+              <p className="text-xs text-gray-500">
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="px-5 py-3 border-t flex justify-end gap-2">
+              <button
+                onClick={() => !deleting && setPendingDelete(null)}
+                className="px-3 py-1 rounded border text-xs bg-gray-50 hover:bg-gray-100 disabled:opacity-50"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="px-3 py-1 rounded text-xs bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -279,4 +389,13 @@ function Th({ children }) {
 }
 function Td({ children, className = "" }) {
   return <td className={`px-3 py-2 align-top ${className}`}>{children}</td>;
+}
+
+function DetailRow({ label, value }) {
+  return (
+    <div className="flex flex-col">
+      <span className="font-medium">{label}</span>
+      <span className="text-gray-700 break-words">{value || "—"}</span>
+    </div>
+  );
 }
