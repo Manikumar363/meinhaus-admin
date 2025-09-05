@@ -3,6 +3,7 @@ import { useAdminSigninMutation } from '../../stores/api/auth/authApi';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Eye, EyeOff } from 'lucide-react';
 
 const CloseXButton = ({ closeToast }) => (
   <button onClick={closeToast} className="toast-close-btn" aria-label="Close">×</button>
@@ -50,6 +51,7 @@ const Login = () => {
   const navigate = useNavigate();
   const token = useSelector((s) => s.auth.accessToken);
   const [form, setForm] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [adminSignin, { isLoading, error, isError }] = useAdminSigninMutation();
   const loadingToastId = useRef(null);
   const slowTimerRef = useRef(null);
@@ -244,7 +246,7 @@ const Login = () => {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={form.password}
                     onChange={onChange}
                     className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
@@ -253,6 +255,18 @@ const Login = () => {
                     placeholder="Enter your password"
                     required
                   />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPassword(p => !p)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? (
+                      <Eye className="w-5 h-5" />
+                    ) : (
+                      <EyeOff className="w-5 h-5" />
+                    )}
+                  </button>
                 </div>
                 {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
               </div>
