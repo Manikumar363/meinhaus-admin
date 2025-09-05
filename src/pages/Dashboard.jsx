@@ -10,6 +10,9 @@ import GallerySection from '../components/GalleryPage/GalleryPageSection';
 import ComplimentaryServicePage from '../components/ComplimentaryServiceRequest/ComplimentaryServicePage';
 import QueryPage from '../components/Query/QueryPageSection';
 import LogoutButton from '../components/LogoutButton';
+import ServiceSectionPage from '../components/ServicePage/serviceSectionPage';
+import { Settings } from 'lucide-react'; 
+
 
 // import icons (renamed to PascalCase where needed)
 import {
@@ -25,6 +28,7 @@ import {
   testimonalsIcon as TestimonialsIcon,
   upArrowIcon as UpArrowIcon,
   downArrowIcon as DownArrowIcon,
+
 } from '../components/ui/icons';
 
 const Dashboard = () => {
@@ -49,6 +53,7 @@ const Dashboard = () => {
   else if (activeMenu === 'gallery') activeComponent = <GallerySection />;
   else if (activeMenu === 'complimentaryService') activeComponent = <ComplimentaryServicePage />;
   else if (activeMenu === 'query') activeComponent = <QueryPage />;
+  else if (activeMenu === 'services') activeComponent = <ServiceSectionPage />;
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -222,6 +227,22 @@ const Dashboard = () => {
             >
               <ArticleIcon className="w-5 h-5" />
               <span>Query</span>
+            </div>
+
+            {/* Services */}
+            <div
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer mb-1 ${
+                activeMenu === 'services'
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+              onClick={() => {
+                setActiveMenu('services');
+                setShowContentDropdown(false);
+              }}
+            >
+              <Settings className="w-5 h-5" />
+              <span>Service Section</span>
             </div>
 
             <div className="flex-1" />
