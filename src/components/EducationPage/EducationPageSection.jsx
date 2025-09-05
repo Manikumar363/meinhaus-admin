@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 // Read your actual env variable names (URL vs BASE) + optional override endpoints
 const API_BASE =
@@ -27,6 +28,9 @@ const initialData = {
 };
 
 export default function EducationPageSection() {
+  // Prefer Redux state; fallback to localStorage for hard refresh.
+  const reduxToken = useSelector((s) => s.auth?.accessToken);
+
   const [data, setData] = useState(initialData);
   const [original, setOriginal] = useState(initialData);
   const [loading, setLoading] = useState(true);
@@ -43,10 +47,23 @@ export default function EducationPageSection() {
     return list;
   }, []); // was [API_BASE]
 
-  const api = axios.create({
-    baseURL: baseUrl,
-    headers: { "Content-Type": "application/json" },
-  });
+  // Memoize axios instance (baseUrl is a build‑time constant, so exclude it from deps)
+  const api = useMemo(() => {
+     const instance = axios.create({
+       baseURL: baseUrl,
+       headers: { "Content-Type": "application/json" },
+     });
+     instance.interceptors.request.use((config) => {
+       const tk =
+         reduxToken ||
+         (typeof window !== "undefined" && localStorage.getItem("admin_access"));
+       if (tk) {
+         config.headers.Authorization = `Bearer ${tk}`;
+       }
+       return config;
+     });
+     return instance;
+  }, [reduxToken]); // baseUrl is constant; safe to exclude
 
   const mapInbound = (p) => ({
     title: p.title || "",
@@ -70,21 +87,22 @@ export default function EducationPageSection() {
 
     if (missingEnv.length) {
       setError("Missing env vars: " + missingEnv.join(", "));
-      // continue with fallbacks
     }
 
     const fullUrl = `${baseUrl}${EDU_FETCH_ENDPOINT}`;
     console.log("[Education] Fetching:", fullUrl);
 
     try {
-      // Spec said GET with body (unusual). Try GET first; if 404 and you KNOW it should accept POST, switch to POST below.
       const res = await api.get(EDU_FETCH_ENDPOINT);
       if (!res?.data?.data) throw new Error("Malformed response");
       const mapped = mapInbound(res.data.data);
       setData(mapped);
       setOriginal(mapped);
     } catch (e) {
-      if (e?.response?.status === 404) {
+      if (e?.response?.status === 401) {
+        setError("Unauthorized (401) – access token missing or expired. Please sign in again.");
+      } else
+       if (e?.response?.status === 404) {
         setError(
           `404 Not Found for "${EDU_FETCH_ENDPOINT}". Confirm actual route. Try variants like:
  - /educations
@@ -156,7 +174,10 @@ Set REACT_APP_EDU_FETCH_ENDPOINT accordingly.`
         setSuccess(res.data.message || "Updated successfully");
       } else throw new Error(res?.data?.message || "Update failed");
     } catch (e2) {
-      if (e2?.response?.status === 404) {
+      if (e2?.response?.status === 401) {
+        setError("Unauthorized (401) – token missing/expired. Re‑login and retry.");
+      } else
+       if (e2?.response?.status === 404) {
         setError(
           `Update endpoint "${EDU_UPDATE_ENDPOINT}" 404. Set REACT_APP_EDU_UPDATE_ENDPOINT to correct path.`
         );
