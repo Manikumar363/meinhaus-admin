@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { adminLogout } from '../stores/api/authSlice';
 
-export default function LogoutButton({ className = '' }) {
+export default function LogoutButton({ className = 'text-sm' }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const onClick = () => {

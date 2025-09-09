@@ -1,53 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { fetchQueries, deleteQuery } from "../../stores/api/query/queries";
 import { EyeIcon, TrashIcon } from "lucide-react";
+import { getToken } from "../../stores/api/client";
 
 const PAGE_SIZE = 10;
 
 function formatDate(iso) {
   if (!iso) return "";
   return new Date(iso).toLocaleString();
-}
-
-// Robust token resolver (scan multiple keys + JSON blobs)
-function resolveToken() {
-  if (typeof localStorage === "undefined") return "";
-  const candidates = [
-    "token",
-    "access_token",
-    "authToken",
-    "auth_token",
-    "adminToken",
-    "Authorization",
-    "user",
-    "authUser",
-    "auth",
-    "persist:root",
-  ];
-  for (const key of candidates) {
-    const raw = localStorage.getItem(key);
-    if (!raw) continue;
-    if (/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(raw.trim())) {
-      return raw.trim();
-    }
-    // JSON blob
-    if (raw.trim().startsWith("{")) {
-      try {
-        const obj = JSON.parse(raw);
-        if (typeof obj.token === "string") return obj.token;
-        if (typeof obj.access_token === "string") return obj.access_token;
-        if (typeof obj.authToken === "string") return obj.authToken;
-        if (obj.state && typeof obj.state === "object") {
-          const nested = JSON.stringify(obj.state);
-          const match = nested.match(/"token":"([^"]+)"/);
-            if (match) return match[1];
-        }
-      } catch {
-        /* ignore */
-      }
-    }
-  }
-  return "";
 }
 
 export default function QueryPageSection() {
@@ -63,40 +23,16 @@ export default function QueryPageSection() {
   const [pendingDelete, setPendingDelete] = useState(null); // query selected for deletion
   const [deleting, setDeleting] = useState(false);
 
-  // Try to get token immediately + poll briefly (covers async login)
+  // Try to get token immediately + react to storage changes
   useEffect(() => {
-    let attempts = 0;
-    function attempt() {
-      const t = resolveToken();
-      if (t) {
-        setToken(t);
-        return;
-      }
-      attempts += 1;
-      if (attempts < 20) {
-        setTimeout(attempt, 250);
-      }
-    }
-    attempt();
-
-    // Listen to storage events (another tab / later set)
+    setToken(getToken());
     function onStorage() {
-      const t = resolveToken();
+      const t = getToken();
       if (t) setToken(t);
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
-
-  // Manual debug (press F12 to see). Remove after confirming.
-  useEffect(() => {
-    if (!token) {
-      const keys = Object.keys(localStorage || {});
-      console.debug("[Query] LocalStorage keys", keys);
-    } else {
-      console.debug("[Query] Using token (length)", token.length);
-    }
-  }, [token]);
 
   // Fetch queries when page or token changes
   useEffect(() => {

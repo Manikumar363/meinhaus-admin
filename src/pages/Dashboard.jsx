@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ArticlesSection from '../components/ContentManagement/ArticleSection/ArticlesSection';
 import TestimonialsSection from '../components/ContentManagement/ClientTestimonials/TestimonialsSection';
 import ComplimentarySection from '../components/ContentManagement/ComplimentaryServices/ComplimentarySection';
@@ -11,7 +11,7 @@ import ComplimentaryServicePage from '../components/ComplimentaryServiceRequest/
 import QueryPage from '../components/Query/QueryPageSection';
 import LogoutButton from '../components/LogoutButton';
 import ServiceSectionPage from '../components/ServicePage/serviceSectionPage';
-import { Settings } from 'lucide-react'; 
+import { serviceIcon as ServiceIcon } from '../components/ui/icons';
 
 
 // import icons (renamed to PascalCase where needed)
@@ -35,6 +35,23 @@ const Dashboard = () => {
   const [activeMenu, setActiveMenu] = useState('content');
   const [showContentDropdown, setShowContentDropdown] = useState(true);
   const [activeContentPage, setActiveContentPage] = useState('slider');
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    const onEsc = (e) => e.key === 'Escape' && setProfileOpen(false);
+    document.addEventListener('mousedown', onDocClick);
+    window.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      window.removeEventListener('keydown', onEsc);
+    };
+  }, []);
 
   const contentPages = [
     { id: 'slider', label: 'Slider Section', icon: <SliderIcon className="w-3 h-3" />, component: <SliderSection /> },
@@ -241,7 +258,7 @@ const Dashboard = () => {
                 setShowContentDropdown(false);
               }}
             >
-              <Settings className="w-5 h-5" />
+              <ServiceIcon className="w-5 h-5" />
               <span>Service Section</span>
             </div>
 
@@ -330,20 +347,37 @@ const Dashboard = () => {
                   12
                 </span>
               </div>
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="relative" ref={profileRef}>
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={profileOpen}
+                  onClick={() => setProfileOpen((v) => !v)}
+                  className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
+                  <svg
+                    className="w-5 h-5 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </button>
+                {profileOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 py-1"
+                  >
+                    {/* Add more items if needed */}
+                    <LogoutButton className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -353,21 +387,17 @@ const Dashboard = () => {
         <main className="flex-1 flex flex-col min-h-0">
           {/* Scroll container (padding here) */}
             <div className="flex-1 overflow-auto p-6 flex flex-col min-h-0">
-              <div className="flex justify-end mb-4 shrink-0">
-                <LogoutButton className="px-3 py-1 bg-red-600 text-white rounded" />
-              </div>
+               {/* Stretch wrapper */}
+               <div className="flex-1 flex min-h-0">
+                 <div className="bg-white rounded-lg shadow-sm p-6 flex-1 flex flex-col min-h-0">
+                   {activeComponent}
+                 </div>
+               </div>
+             </div>
+         </main>
+       </div>
+     </div>
+   );
+ };
 
-              {/* Stretch wrapper */}
-              <div className="flex-1 flex min-h-0">
-                <div className="bg-white rounded-lg shadow-sm p-6 flex-1 flex flex-col min-h-0">
-                  {activeComponent}
-                </div>
-              </div>
-            </div>
-        </main>
-      </div>
-    </div>
-  );
-};
-
-export default Dashboard;
+ export default Dashboard;
