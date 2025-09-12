@@ -9,6 +9,7 @@ import EducationSection from '../components/EducationPage/EducationPageSection';
 import GallerySection from '../components/GalleryPage/GalleryPageSection';
 import ComplimentaryServicePage from '../components/ComplimentaryServiceRequest/ComplimentaryServicePage';
 import QueryPage from '../components/Query/QueryPageSection';
+import BookingSection from '../components/Booking/BookingSection';
 import LogoutButton from '../components/LogoutButton';
 import ServiceSectionPage from '../components/ServicePage/serviceSectionPage';
 import { serviceIcon as ServiceIcon } from '../components/ui/icons';
@@ -28,6 +29,7 @@ import {
   testimonalsIcon as TestimonialsIcon,
   upArrowIcon as UpArrowIcon,
   downArrowIcon as DownArrowIcon,
+  bookingIcon as BookingIcon,
 
 } from '../components/ui/icons';
 
@@ -71,12 +73,13 @@ const Dashboard = () => {
   else if (activeMenu === 'complimentaryService') activeComponent = <ComplimentaryServicePage />;
   else if (activeMenu === 'query') activeComponent = <QueryPage />;
   else if (activeMenu === 'services') activeComponent = <ServiceSectionPage />;
+  else if (activeMenu === 'booking') activeComponent = <BookingSection />;
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-800 text-white h-full flex flex-col">
-        <div className="p-6 border-b border-gray-700">
+      <div className="w-64 bg-[#171717] text-white h-full flex flex-col">
+        <div className="p-6 border-b border-[#282A2C]">
           <div className="flex items-center space-x-3">
             <img
               src="/main-logo.png"
@@ -134,8 +137,8 @@ const Dashboard = () => {
                       key={page.id}
                       className={`flex items-center space-x-2 px-3 py-2 rounded-lg cursor-pointer mb-1 text-sm ${
                         activeContentPage === page.id
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-blue-600'
+                          ? 'bg-[#282A2C] text-white'
+                          : 'text-gray-300 hover:bg-[#282A2C]'
                       }`}
                       onClick={() => {
                         setActiveMenu('content');
@@ -261,7 +264,22 @@ const Dashboard = () => {
               <ServiceIcon className="w-5 h-5" />
               <span>Service Section</span>
             </div>
-
+            {/* booking */}
+            <div
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer mb-1 ${
+                activeMenu === 'booking'
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+              onClick={() => {
+                setActiveMenu('booking');
+                setShowContentDropdown(false);
+              }}
+            >
+              <BookingIcon className="w-5 h-5" />
+              <span>Bookings</span>
+            </div>
+            
             <div className="flex-1" />
           </div>
         </nav>
