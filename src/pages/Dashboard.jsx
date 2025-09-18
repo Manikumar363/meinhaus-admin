@@ -4,14 +4,13 @@ import TestimonialsSection from '../components/ContentManagement/ClientTestimoni
 import ComplimentarySection from '../components/ContentManagement/ComplimentaryServices/ComplimentarySection';
 import SliderSection from '../components/ContentManagement/SliderSection/SliderSection';
 import AboutSection from '../components/AboutPage/AboutPageSection';
-import ContactUsSection from '../components/ContactUs/ContactUsPageSection';
 import EducationSection from '../components/EducationPage/EducationPageSection';
-import GallerySection from '../components/GalleryPage/GalleryPageSection';
 import ComplimentaryServicePage from '../components/ComplimentaryServiceRequest/ComplimentaryServicePage';
 import QueryPage from '../components/Query/QueryPageSection';
 import BookingSection from '../components/Booking/BookingSection';
 import LogoutButton from '../components/LogoutButton';
 import ServiceSectionPage from '../components/ServicePage/serviceSectionPage';
+import PriceFeedback from '../components/PriceFeedback/PriceFeedback';
 import { serviceIcon as ServiceIcon } from '../components/ui/icons';
 
 
@@ -20,7 +19,6 @@ import {
   DashboardIcon,
   cmsIcon as CmsIcon,
   aboutIcon as AboutIcon,
-  contactIcon as ContactIcon,
   educationIcon as EducationIcon,
   galleryIcon as GalleryIcon,
   complimentaryIcon as ComplimentaryIcon,
@@ -30,6 +28,7 @@ import {
   upArrowIcon as UpArrowIcon,
   downArrowIcon as DownArrowIcon,
   bookingIcon as BookingIcon,
+  pricefeedbackIcon as PriceFeedbackIcon,   
 
 } from '../components/ui/icons';
 
@@ -67,13 +66,13 @@ const Dashboard = () => {
   if (activeMenu === 'content') {
     activeComponent = contentPages.find(p => p.id === activeContentPage)?.component;
   } else if (activeMenu === 'about') activeComponent = <AboutSection />;
-  else if (activeMenu === 'contact') activeComponent = <ContactUsSection />;
   else if (activeMenu === 'education') activeComponent = <EducationSection />;
-  else if (activeMenu === 'gallery') activeComponent = <GallerySection />;
+  else if (activeMenu === 'gallery') activeComponent = <div>Gallery Section Coming Soon...</div>;
   else if (activeMenu === 'complimentaryService') activeComponent = <ComplimentaryServicePage />;
   else if (activeMenu === 'query') activeComponent = <QueryPage />;
   else if (activeMenu === 'services') activeComponent = <ServiceSectionPage />;
   else if (activeMenu === 'booking') activeComponent = <BookingSection />;
+  else if (activeMenu === 'pricefeedback') activeComponent = <PriceFeedback />;
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -169,22 +168,6 @@ const Dashboard = () => {
               <span>About Section</span>
             </div>
 
-            {/* Contact */}
-            <div
-              className={`flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer mb-1 ${
-                activeMenu === 'contact'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-300 hover:bg-gray-700'
-              }`}
-              onClick={() => {
-                setActiveMenu('contact');
-                setShowContentDropdown(false);
-              }}
-            >
-              <ContactIcon className="w-5 h-5" />
-              <span>ContactUs Section</span>
-            </div>
-
             {/* Education */}
             <div
               className={`flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer mb-1 ${
@@ -278,6 +261,22 @@ const Dashboard = () => {
             >
               <BookingIcon className="w-5 h-5" />
               <span>Bookings</span>
+            </div>
+
+            {/* price feedback */}
+            <div
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer mb-1 ${
+                activeMenu === 'pricefeedback'
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+              onClick={() => {
+                setActiveMenu('pricefeedback');
+                setShowContentDropdown(false);
+              }}
+            >
+              <PriceFeedbackIcon className="w-5 h-5" />
+              <span>Price Feedback</span>
             </div>
             
             <div className="flex-1" />
