@@ -1,4 +1,5 @@
 import React from "react";
+import {searchIcon as SearchIcon, dotsIcon as DotsIcon, deleteIcon as DeleteIcon} from "../ui/icons";
 
 const dummyStats = [
   {
@@ -114,14 +115,23 @@ const PriceFeedbackDetails = ({ onBack }) => {
           ))}
         </div>
         {/* Search Bar */}
-        <div className="flex justify-end mb-2">
-          <input type="text" placeholder="Search by Professional name" className="border rounded-md px-2 py-3 bg-[#E9E9E9] text-[#9D9D9D] w-80" />
+        <div className="flex mb-2 items-center justify-end">
+          <div className="relative w-[420px]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9D9D9D]">
+              <SearchIcon />
+            </span>
+            <input
+              type="text"
+              placeholder="Search by Professional name"
+              className="w-full border rounded-md pl-10 pr-2 py-3 bg-[#E9E9E9] text-[#9D9D9D] text-base"
+            />
+          </div>
         </div>
         {/* Table */}
         <div className="bg-white rounded-xl shadow p-4">
           <table className="min-w-full text-left">
             <thead>
-              <tr className="text-gray-700 text-sm border-b">
+              <tr className="text-[#262626]  font-semibold border-b">
                 <th className="px-3 py-2 font-semibold">S.No.</th>
                 <th className="px-3 py-2 font-semibold">Professional</th>
                 <th className="px-3 py-2 font-semibold">Email Id</th>
@@ -156,11 +166,11 @@ const PriceFeedbackDetails = ({ onBack }) => {
                   <td className="px-3 py-2 flex items-center gap-2">
                     <div className="relative group">
                       <button className="text-gray-400 hover:text-black" title="Menu">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                        <DotsIcon />
                       </button>
                       <div className="hidden group-hover:block absolute right-0 mt-2 w-28 bg-white border rounded shadow z-10">
                         <button className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-sm">
-                          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M9 6v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/><path d="M10 11v6M14 11v6"/></svg>
+                          <DeleteIcon />
                           Delete
                         </button>
                       </div>

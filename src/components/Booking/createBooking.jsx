@@ -23,10 +23,10 @@ const CreateBooking = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-50 p-6">
-			<div className="max-w-6xl mx-auto flex gap-8">
+		<div className="min-h-screen bg-gray-50">
+			<div className="max-w-7xl mx-auto flex gap-8">
 				   {/* Sidebar */}
-				   <div className="w-64 bg-white rounded-lg p-6 h-fit mt-2">
+				   <div className="w-64 bg-white rounded-lg h-fit mt-2">
 							<div className="mt-8">
 								<div className="py-2 px-4 rounded font-medium bg-gray-100 text-black">Customer Details</div>
 								<div className="py-2 px-4 rounded font-medium mt-2 text-gray-400">Project Details</div>
@@ -35,7 +35,7 @@ const CreateBooking = () => {
 				{/* Main Form */}
 				<form className="flex-1 space-y-8">
 					{/* Customer Details */}
-					<div className="bg-white rounded-lg p-6">
+					<div className="bg-white rounded-lg">
 						<div className="font-semibold text-lg mb-4">Customer Details</div>
 						<div className="flex gap-8 mb-4">
 							<label className="flex items-center gap-2 cursor-pointer">

@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import PriceFeedbackDetails from "./PriceFeedbackDetails";
+import { searchIcon as SearchIcon, deleteIcon as DeleteIcon , EyeIcon, dotsIcon as DotsIcon} from "../ui/icons";
 
 
 const dummyRows = [
@@ -100,23 +101,32 @@ const PriceFeedback = () => {
 	}
 
 	return (
-		<div className="bg-gray-50 min-h-screen p-1">
-			<div className="max-w-6xl mx-auto">
+		<div className="bg-gray-50 min-h-screen">
+			<div className="max-w-7xl mx-auto">
 				<div className="text-xl font-bold mb-4">Price Feedback</div>
 				{/* Search and Filter Bar */}
-				<div className="flex gap-4 mb-2">
-					<input type="text" placeholder="Search by Project title, Customer name, Address" className="flex-1 border justify-end rounded-md px-2 py-3 bg-[#E9E9E9] text-[#9D9D9D]" />
-					<select className="border rounded-md px-4 py-3 bg-white text-gray-700">
-						<option>Select Service Name</option>
-						<option>Appliance Install</option>
-						<option>Home Painting</option>
-					</select>
-				</div>
+	       <div className="flex gap-4 mb-2 items-center justify-end">
+		       <div className="relative w-[420px]">
+			       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9D9D9D]">
+				       <SearchIcon />
+			       </span>
+			       <input
+				       type="text"
+				       placeholder="Search by Project title, Customer name, Address"
+				       className="w-full border rounded-md pl-10 pr-2 py-3 bg-[#E9E9E9] text-[#9D9D9D] text-base"
+			       />
+		       </div>
+		       <select className="border rounded-md px-4 py-3 bg-[#E9E9E9] text-[#9D9D9D] text-base w-[220px]">
+			       <option>Select Service Name</option>
+			       <option>Appliance Install</option>
+			       <option>Home Painting</option>
+		       </select>
+	       </div>
 				{/* Table */}
-				<div className="bg-white rounded-xl shadow p-4">
+				<div className="bg-white rounded-xl shadow p-1">
 					<table className="min-w-full text-left">
 						<thead>
-							<tr className="text-gray-700 text-sm border-b">
+							<tr className="text-[#262626] font-semibold text-base border-b">
 								<th className="px-3 py-2 font-semibold">S.No.</th>
 								<th className="px-3 py-2 font-semibold">Title</th>
 								<th className="px-3 py-2 font-semibold">Customer</th>
@@ -153,17 +163,17 @@ const PriceFeedback = () => {
 									<td className="px-3 py-2">{row.time}</td>
 									<td className="px-3 py-2">{row.created}</td>
 									<td className="px-3 py-2">{row.service}</td>
-									<td className="px-3 py-2 flex items-center gap-2">
+									<td className="px-5 py-4 flex items-center gap-4">
 										<button className="text-yellow-500 hover:text-yellow-600" title="View" onClick={() => setShowDetails(true)}>
-											<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+											<EyeIcon />
 										</button>
 										<div className="relative group">
 											<button className="text-gray-400 hover:text-black" title="Menu">
-												<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+												<DotsIcon />
 											</button>
 											<div className="hidden group-hover:block absolute right-0 mt-2 w-28 bg-white border rounded shadow z-10">
 												<button className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-sm">
-													<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M9 6v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/><path d="M10 11v6M14 11v6"/></svg>
+													<DeleteIcon />
 													Delete
 												</button>
 											</div>
