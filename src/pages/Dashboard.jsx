@@ -11,6 +11,7 @@ import BookingSection from '../components/Booking/BookingSection';
 import LogoutButton from '../components/LogoutButton';
 import ServiceSectionPage from '../components/ServicePage/serviceSectionPage';
 import PriceFeedback from '../components/PriceFeedback/PriceFeedback';
+import CreateEstimate from '../components/CreateEstimate/createEstimate';
 import { serviceIcon as ServiceIcon } from '../components/ui/icons';
 
 
@@ -73,6 +74,7 @@ const Dashboard = () => {
   else if (activeMenu === 'services') activeComponent = <ServiceSectionPage />;
   else if (activeMenu === 'booking') activeComponent = <BookingSection />;
   else if (activeMenu === 'pricefeedback') activeComponent = <PriceFeedback />;
+  else if (activeMenu === 'createEstimate') activeComponent = <CreateEstimate />;
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -88,8 +90,26 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <nav className="flex-1 mt-4">
+        <nav className="flex-1 mt-2">
           <div className="px-4 h-full flex flex-col">
+            {/* Create Estimate */}
+            <div
+              className={`flex items-center space-x-3 px-2 py-2 rounded-lg cursor-pointer mb-1 ${
+                activeMenu === 'createEstimate'
+                  ? 'bg-[#1E9BD01F] text-[#1E9BD0]'
+                  : 'bg-[#1E9BD01F] text-[#1E9BD0] hover:bg-blue-200'
+              }`}
+              onClick={() => {
+                setActiveMenu('createEstimate');
+                setShowContentDropdown(false);
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Create Estimate</span>
+            </div>
+
             {/* Dashboard */}
             <div
               className={`flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer mb-1 ${
