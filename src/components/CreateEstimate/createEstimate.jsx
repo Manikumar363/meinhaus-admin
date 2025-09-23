@@ -64,40 +64,48 @@ const CreateEstimate = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto p-1">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <button className="text-gray-500 hover:text-black">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
-          <h1 className="text-2xl font-bold text-gray-800">Create Estimate</h1>
-        </div>
-
-        {/* Top Options */}
-        <div className="flex gap-4 mb-6">
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="estimateType"
-              value="new"
-              checked={formData.estimateType === "new"}
-              onChange={handleInputChange}
-              className="w-4 h-4"
-            />
-            <span className="text-gray-700">Create New Estimate</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="estimateType"
-              value="draft"
-              checked={formData.estimateType === "draft"}
-              onChange={handleInputChange}
-              className="w-4 h-4"
-            />
-            <span className="text-gray-700">Draft Estimate</span>
-          </label>
+        {/* Header with inline checkboxes */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <button className="text-gray-500 hover:text-black">
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <h1 className="text-2xl font-bold text-gray-800">Create Estimate</h1>
+          </div>
+          
+          {/* Checkboxes aligned inline with header */}
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="createNewEstimate"
+                checked={formData.estimateType === "new"}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setFormData(prev => ({ ...prev, estimateType: "new" }));
+                  }
+                }}
+                className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
+              />
+              <span className="text-gray-700">Create New Estimate</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="draftEstimate"
+                checked={formData.estimateType === "draft"}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setFormData(prev => ({ ...prev, estimateType: "draft" }));
+                  }
+                }}
+                className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
+              />
+              <span className="text-gray-700">Draft Estimate</span>
+            </label>
+          </div>
         </div>
 
         <div className="flex gap-8">
@@ -144,23 +152,29 @@ const CreateEstimate = () => {
                 <div className="flex gap-4 mb-6">
                   <label className="flex items-center gap-2">
                     <input
-                      type="radio"
-                      name="customerType"
-                      value="new"
+                      type="checkbox"
+                      name="createNewCustomer"
                       checked={formData.customerType === "new"}
-                      onChange={handleInputChange}
-                      className="w-4 h-4"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData(prev => ({ ...prev, customerType: "new" }));
+                        }
+                      }}
+                      className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
                     />
                     <span className="text-gray-700">Create New Customer</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input
-                      type="radio"
-                      name="customerType"
-                      value="existing"
+                      type="checkbox"
+                      name="existingCustomer"
                       checked={formData.customerType === "existing"}
-                      onChange={handleInputChange}
-                      className="w-4 h-4"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData(prev => ({ ...prev, customerType: "existing" }));
+                        }
+                      }}
+                      className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
                     />
                     <span className="text-gray-700">Existing Customer</span>
                   </label>
@@ -245,23 +259,29 @@ const CreateEstimate = () => {
                   <div className="flex gap-4 mb-4">
                     <label className="flex items-center gap-2">
                       <input
-                        type="radio"
-                        name="addressType"
-                        value="new"
+                        type="checkbox"
+                        name="addNewAddress"
                         checked={formData.addressType === "new"}
-                        onChange={handleInputChange}
-                        className="w-4 h-4"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData(prev => ({ ...prev, addressType: "new" }));
+                          }
+                        }}
+                        className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
                       />
                       <span className="text-gray-700">Add New Address</span>
                     </label>
                     <label className="flex items-center gap-2">
                       <input
-                        type="radio"
-                        name="addressType"
-                        value="choose"
+                        type="checkbox"
+                        name="chooseAddress"
                         checked={formData.addressType === "choose"}
-                        onChange={handleInputChange}
-                        className="w-4 h-4"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData(prev => ({ ...prev, addressType: "choose" }));
+                          }
+                        }}
+                        className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
                       />
                       <span className="text-gray-700">Choose Address</span>
                     </label>
@@ -371,7 +391,7 @@ const CreateEstimate = () => {
                         name="autoDivide"
                         checked={formData.autoDivide}
                         onChange={handleInputChange}
-                        className="w-4 h-4"
+                        className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
                       />
                       <span className="text-gray-700">Auto Divide</span>
                     </label>
