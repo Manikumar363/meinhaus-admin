@@ -1,0 +1,290 @@
+import React, { useState } from "react";
+import AddSalesExecutiveModal from "./AddSalesExecutiveModal";
+
+const AllEstimates = () => {
+  const [activeTab, setActiveTab] = useState("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+  const handleAddSalesExecutive = (executive) => {
+    console.log("Adding sales executive:", executive);
+    // Add your logic here to assign the sales executive
+  };
+
+  // Dummy data for estimates
+  const estimatesData = [
+    {
+      id: 1,
+      jobId: "#JOB-394413",
+      title: "Home Painting service...",
+      customer: {
+        name: "James Robert",
+        phone: "+11209876534",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+      },
+      address: "Highway 407, Vaughan, Ontario, Canada...",
+      price: "$21345",
+      services: "Appliance Install",
+      moreServices: "+2 more services",
+      assignStatus: "2/3",
+      status: "Requested",
+      statusColor: "bg-orange-100 text-orange-600"
+    },
+    {
+      id: 2,
+      jobId: "#JOB-394413",
+      title: "Home Painting service...",
+      customer: {
+        name: "James Robert",
+        phone: "+11209876534",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+      },
+      address: "Highway 407, Vaughan, Ontario, Canada...",
+      price: "$21345",
+      services: "Appliance Install",
+      moreServices: "+2 more services",
+      assignStatus: "2/3",
+      status: "Paid",
+      statusColor: "bg-green-100 text-green-600"
+    },
+    {
+      id: 3,
+      jobId: "#JOB-394413",
+      title: "Home Painting service...",
+      customer: {
+        name: "James Robert",
+        phone: "+11209876534",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+      },
+      address: "Highway 407, Vaughan, Ontario, Canada...",
+      price: "$21345",
+      services: "Appliance Install",
+      moreServices: "+2 more services",
+      assignStatus: "2/3",
+      status: "Paid",
+      statusColor: "bg-green-100 text-green-600"
+    },
+    {
+      id: 4,
+      jobId: "#JOB-394413",
+      title: "Home Painting service...",
+      customer: {
+        name: "James Robert",
+        phone: "+11209876534",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+      },
+      address: "Highway 407, Vaughan, Ontario, Canada...",
+      price: "$21345",
+      services: "Appliance Install",
+      moreServices: "+2 more services",
+      assignStatus: "2/3",
+      status: "Paid",
+      statusColor: "bg-green-100 text-green-600"
+    },
+    {
+      id: 5,
+      jobId: "#JOB-394413",
+      title: "Home Painting service...",
+      customer: {
+        name: "James Robert",
+        phone: "+11209876534",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+      },
+      address: "Highway 407, Vaughan, Ontario, Canada...",
+      price: "$21345",
+      services: "Appliance Install",
+      moreServices: "+2 more services",
+      assignStatus: "2/3",
+      status: "Paid",
+      statusColor: "bg-green-100 text-green-600"
+    }
+  ];
+
+  const tabs = [
+    { id: "all", label: "All Estimates", count: 58 },
+    { id: "paid", label: "Paid", count: 12 },
+    { id: "requested", label: "Requested", count: 23 },
+    { id: "viewed", label: "Viewed", count: 10 },
+    { id: "not-initiated", label: "Not Initiated", count: 2 }
+  ];
+
+  return (
+    <div className="bg-gray-50 min-h-screen p-1">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-xl font-bold mb-4">All Estimates</div>
+        
+        {/* Search and Filter Bar */}
+        <div className="flex gap-4 mb-2 items-center justify-end">
+          <div className="relative w-[420px]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9D9D9D]">
+              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </span>
+            <input
+              type="text"
+              placeholder="Search by Project title, Customer name, Address"
+              className="w-full border rounded-md pl-10 pr-2 py-3 bg-[#E9E9E9] text-[#9D9D9D] text-base"
+            />
+          </div>
+          <select className="border rounded-md px-4 py-3 bg-[#E9E9E9] text-[#9D9D9D] text-base w-[220px]">
+            <option>Select Service Name</option>
+            <option>Appliance Install</option>
+            <option>Home Painting</option>
+          </select>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 mb-4 border-b border-gray-200">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 flex items-center gap-2 ${
+                activeTab === tab.id
+                  ? "border-blue-500 text-blue-600 bg-blue-50"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {tab.label}
+              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                activeTab === tab.id
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-gray-100 text-gray-600"
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow p-4">
+          <table className="min-w-full text-left">
+            <thead>
+              <tr className="text-gray-700 text-sm border-b">
+                <th className="px-3 py-2 font-semibold">S.No.</th>
+                <th className="px-3 py-2 font-semibold">Title</th>
+                <th className="px-3 py-2 font-semibold">Customer</th>
+                <th className="px-3 py-2 font-semibold">Address</th>
+                <th className="px-3 py-2 font-semibold">Price</th>
+                <th className="px-3 py-2 font-semibold">Services</th>
+                <th className="px-3 py-2 font-semibold">Assign Status</th>
+                <th className="px-3 py-2 font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {estimatesData.map((estimate, idx) => (
+                <tr key={estimate.id} className="border-b text-sm">
+                  <td className="px-3 py-2">{idx + 1}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex flex-col gap-1">
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium w-fit ${estimate.statusColor}`}>
+                        {estimate.status}
+                      </span>
+                      <span className="font-semibold text-orange-600">{estimate.jobId}</span>
+                      <span className="font-semibold">{estimate.title}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src={estimate.customer.avatar} 
+                        alt="avatar" 
+                        className="w-8 h-8 rounded-full border" 
+                      />
+                      <div>
+                        <div className="font-medium">{estimate.customer.name}</div>
+                        <div className="text-xs text-gray-500">{estimate.customer.phone}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-gray-600">{estimate.address}</td>
+                  <td className="px-3 py-2 font-semibold">{estimate.price}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-medium">{estimate.services}</span>
+                      <span className="text-xs text-blue-600">{estimate.moreServices} ▸</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <span className="font-medium">{estimate.assignStatus}</span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <button className="text-yellow-500 hover:text-yellow-600" title="View">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      </button>
+                      <div className="relative group">
+                        <button className="text-gray-400 hover:text-black" title="Menu">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <circle cx="5" cy="12" r="2"/>
+                            <circle cx="12" cy="12" r="2"/>
+                            <circle cx="19" cy="12" r="2"/>
+                          </svg>
+                        </button>
+                        <div className="hidden group-hover:block absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
+                          <button className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-gray-100 w-full text-sm">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            Edit
+                          </button>
+                          <button className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-sm">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M3 6h18"/>
+                              <path d="M9 6v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/>
+                              <path d="M10 11v6M14 11v6"/>
+                            </svg>
+                            Delete
+                          </button>
+                          <button 
+                            onClick={handleOpenModal}
+                            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 w-full text-sm"
+                          >
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                              <circle cx="8.5" cy="7" r="4"/>
+                              <path d="M20 8v6M23 11h-6"/>
+                            </svg>
+                            Add Sales Executive
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {/* Pagination */}
+          <div className="flex justify-center items-center mt-6 gap-2 text-gray-600">
+            <span>Previous</span>
+            <button className="w-7 h-7 rounded bg-blue-100 text-blue-700 font-bold">1</button>
+            <button className="w-7 h-7 rounded hover:bg-blue-100">2</button>
+            <button className="w-7 h-7 rounded hover:bg-blue-100">3</button>
+            <button className="w-7 h-7 rounded hover:bg-blue-100">4</button>
+            <button className="w-7 h-7 rounded hover:bg-blue-100">5</button>
+            <span>Next</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Add Sales Executive Modal */}
+      <AddSalesExecutiveModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onAdd={handleAddSalesExecutive}
+      />
+    </div>
+  );
+};
+
+export default AllEstimates;

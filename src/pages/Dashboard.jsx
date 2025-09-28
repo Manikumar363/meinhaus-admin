@@ -12,7 +12,8 @@ import LogoutButton from '../components/LogoutButton';
 import ServiceSectionPage from '../components/ServicePage/serviceSectionPage';
 import PriceFeedback from '../components/PriceFeedback/PriceFeedback';
 import CreateEstimate from '../components/CreateEstimate/createEstimate';
-import { serviceIcon as ServiceIcon } from '../components/ui/icons';
+import AllEstimates from '../components/EstimateSection/allEstimate';
+import { AllEstimateSection, serviceIcon as ServiceIcon } from '../components/ui/icons';
 
 
 // import icons (renamed to PascalCase where needed)
@@ -75,6 +76,7 @@ const Dashboard = () => {
   else if (activeMenu === 'booking') activeComponent = <BookingSection />;
   else if (activeMenu === 'pricefeedback') activeComponent = <PriceFeedback />;
   else if (activeMenu === 'createEstimate') activeComponent = <CreateEstimate />;
+  else if (activeMenu === 'allEstimates') activeComponent = <AllEstimates />;
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -170,6 +172,21 @@ const Dashboard = () => {
                   ))}
                 </div>
               )}
+            </div>
+            {/* All estimate section */}
+            <div
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer mb-1 ${
+                activeMenu === 'allEstimates'
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+              onClick={() => {
+                setActiveMenu('allEstimates');
+                setShowContentDropdown(false);
+              }}
+            >
+              <AllEstimateSection className="w-5 h-5" />
+              <span>All Estimates</span>
             </div>
 
             {/* About */}
