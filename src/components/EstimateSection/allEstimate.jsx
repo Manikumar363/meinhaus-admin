@@ -1,15 +1,41 @@
 import React, { useState } from "react";
 import AddSalesExecutiveModal from "./AddSalesExecutiveModal";
+import BookingDetails from "./BookingDetails";
+import EditEstimate from "./EditEstimate";
+import { AddIcon, DeleteIcon, EditIcon, EyeIcon, dotsIcon as DotsIcon } from "../ui/icons";
 
 const AllEstimates = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showBookingDetails, setShowBookingDetails] = useState(false);
+  const [showEditEstimate, setShowEditEstimate] = useState(false);
+  const [selectedEstimate, setSelectedEstimate] = useState(null);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
   const handleAddSalesExecutive = (executive) => {
     console.log("Adding sales executive:", executive);
     // Add your logic here to assign the sales executive
+  };
+
+  const handleViewBookingDetails = (estimate) => {
+    setSelectedEstimate(estimate);
+    setShowBookingDetails(true);
+  };
+
+  const handleBackFromBookingDetails = () => {
+    setShowBookingDetails(false);
+    setSelectedEstimate(null);
+  };
+
+  const handleEditEstimate = (estimate) => {
+    setSelectedEstimate(estimate);
+    setShowEditEstimate(true);
+  };
+
+  const handleBackFromEditEstimate = () => {
+    setShowEditEstimate(false);
+    setSelectedEstimate(null);
   };
 
   // Dummy data for estimates
@@ -108,6 +134,16 @@ const AllEstimates = () => {
     { id: "viewed", label: "Viewed", count: 10 },
     { id: "not-initiated", label: "Not Initiated", count: 2 }
   ];
+
+  // Show booking details if selected
+  if (showBookingDetails && selectedEstimate) {
+    return <BookingDetails onBack={handleBackFromBookingDetails} />;
+  }
+
+  // Show edit estimate if selected
+  if (showEditEstimate && selectedEstimate) {
+    return <EditEstimate onBack={handleBackFromEditEstimate} estimate={selectedEstimate} />;
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen p-1">
@@ -214,45 +250,34 @@ const AllEstimates = () => {
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <button className="text-yellow-500 hover:text-yellow-600" title="View">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
+                      <button 
+                        className="text-yellow-500 hover:text-yellow-600" 
+                        title="View"
+                        onClick={() => handleViewBookingDetails(estimate)}
+                      >
+                        <EyeIcon />
                       </button>
                       <div className="relative group">
                         <button className="text-gray-400 hover:text-black" title="Menu">
-                          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <circle cx="5" cy="12" r="2"/>
-                            <circle cx="12" cy="12" r="2"/>
-                            <circle cx="19" cy="12" r="2"/>
-                          </svg>
+                          <DotsIcon />
                         </button>
                         <div className="hidden group-hover:block absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
-                          <button className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-gray-100 w-full text-sm">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
+                          <button 
+                            className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-gray-100 w-full text-sm"
+                            onClick={() => handleEditEstimate(estimate)}
+                          >
+                            <EditIcon />
                             Edit
                           </button>
                           <button className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-sm">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path d="M3 6h18"/>
-                              <path d="M9 6v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/>
-                              <path d="M10 11v6M14 11v6"/>
-                            </svg>
+                            <DeleteIcon />
                             Delete
                           </button>
                           <button 
                             onClick={handleOpenModal}
                             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 w-full text-sm"
                           >
-                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                              <circle cx="8.5" cy="7" r="4"/>
-                              <path d="M20 8v6M23 11h-6"/>
-                            </svg>
+                            <AddIcon />
                             Add Sales Executive
                           </button>
                         </div>

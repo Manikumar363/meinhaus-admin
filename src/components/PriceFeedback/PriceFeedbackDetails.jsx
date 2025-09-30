@@ -1,5 +1,5 @@
 import React from "react";
-import {searchIcon as SearchIcon, dotsIcon as DotsIcon, deleteIcon as DeleteIcon} from "../ui/icons";
+import {searchIcon as SearchIcon, dotsIcon as DotsIcon, DeleteIcon} from "../ui/icons";
 
 const dummyStats = [
   {

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import PriceFeedbackDetails from "./PriceFeedbackDetails";
-import { searchIcon as SearchIcon, deleteIcon as DeleteIcon , EyeIcon, dotsIcon as DotsIcon} from "../ui/icons";
+import { searchIcon as SearchIcon, DeleteIcon , EyeIcon, dotsIcon as DotsIcon} from "../ui/icons";
 
 
 const dummyRows = [

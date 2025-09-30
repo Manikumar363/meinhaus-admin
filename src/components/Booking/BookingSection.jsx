@@ -3,7 +3,7 @@ import CreateBooking from "./createBooking.jsx";
 import BookingDetails from "./BookingDetails.jsx";
 import { viewIcon as ViewIcon,
     dotsIcon as DotsIcon,
-    deleteIcon as DeleteIcon,
+    DeleteIcon,
  } from "../ui/icons";
 
 // Dummy data for demonstration
