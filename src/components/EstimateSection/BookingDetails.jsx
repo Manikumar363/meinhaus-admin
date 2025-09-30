@@ -138,8 +138,8 @@ const BookingDetails = ({ onBack }) => {
                 {/* Left Column */}
                 <div className="space-y-6">
                   {/* Project Title */}
-                  <div className="relative">
-                    <div className="absolute -left-10 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
@@ -151,8 +151,8 @@ const BookingDetails = ({ onBack }) => {
                   </div>
 
                   {/* Booking ID */}
-                  <div className="relative">
-                    <div className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                       </svg>
@@ -164,8 +164,8 @@ const BookingDetails = ({ onBack }) => {
                   </div>
 
                   {/* Customer Name */}
-                  <div className="relative">
-                    <div className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full overflow-hidden">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                       <img 
                         src="https://randomuser.me/api/portraits/men/32.jpg" 
                         alt="James Robert" 
@@ -179,8 +179,8 @@ const BookingDetails = ({ onBack }) => {
                   </div>
 
                   {/* Email ID */}
-                  <div className="relative">
-                    <div className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                       </svg>
@@ -195,8 +195,8 @@ const BookingDetails = ({ onBack }) => {
                 {/* Right Column */}
                 <div className="space-y-6">
                   {/* Total Project Cost */}
-                  <div className="relative">
-                    <div className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                       </svg>
@@ -208,8 +208,8 @@ const BookingDetails = ({ onBack }) => {
                   </div>
 
                   {/* Mobile Number */}
-                  <div className="relative">
-                    <div className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                       </svg>
@@ -221,8 +221,8 @@ const BookingDetails = ({ onBack }) => {
                   </div>
 
                   {/* Created At */}
-                  <div className="relative">
-                    <div className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                       </svg>
@@ -234,8 +234,8 @@ const BookingDetails = ({ onBack }) => {
                   </div>
 
                   {/* Address */}
-                  <div className="relative">
-                    <div className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                         <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
