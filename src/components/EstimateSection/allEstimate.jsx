@@ -10,6 +10,7 @@ const AllEstimates = () => {
   const [showBookingDetails, setShowBookingDetails] = useState(false);
   const [showEditEstimate, setShowEditEstimate] = useState(false);
   const [selectedEstimate, setSelectedEstimate] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -257,30 +258,45 @@ const AllEstimates = () => {
                       >
                         <EyeIcon />
                       </button>
-                      <div className="relative group">
-                        <button className="text-gray-400 hover:text-black" title="Menu">
+                      <div className="relative">
+                        <button 
+                          className="text-gray-400 hover:text-black" 
+                          title="Menu"
+                          onClick={() => setOpenDropdownId(openDropdownId === estimate.id ? null : estimate.id)}
+                        >
                           <DotsIcon />
                         </button>
-                        <div className="hidden group-hover:block absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
-                          <button 
-                            className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-gray-100 w-full text-sm"
-                            onClick={() => handleEditEstimate(estimate)}
-                          >
-                            <EditIcon />
-                            Edit
-                          </button>
-                          <button className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-sm">
-                            <DeleteIcon />
-                            Delete
-                          </button>
-                          <button 
-                            onClick={handleOpenModal}
-                            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 w-full text-sm"
-                          >
-                            <AddIcon />
-                            Add Sales Executive
-                          </button>
-                        </div>
+                        {openDropdownId === estimate.id && (
+                          <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-10">
+                            <button 
+                              className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-gray-100 w-full text-sm text-left"
+                              onClick={() => {
+                                handleEditEstimate(estimate);
+                                setOpenDropdownId(null);
+                              }}
+                            >
+                              <EditIcon />
+                              Edit
+                            </button>
+                            <button 
+                              className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-sm text-left"
+                              onClick={() => setOpenDropdownId(null)}
+                            >
+                              <DeleteIcon />
+                              Delete
+                            </button>
+                            <button 
+                              onClick={() => {
+                                handleOpenModal();
+                                setOpenDropdownId(null);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 w-full text-sm text-left"
+                            >
+                              <AddIcon />
+                              Add Sales Executive
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
