@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { EyeIcon, EditIcon, DeleteIcon, dotsIcon as DotIcon, PaymentIcon, UploadIcon } from "../ui/icons";
+import PaidJobDetails from "./PaidJobDetails";
 
 const BookingDetails = ({ onBack }) => {
   const [isViewLogsOpen, setIsViewLogsOpen] = useState(false);
@@ -9,6 +10,8 @@ const BookingDetails = ({ onBack }) => {
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
   const [isEditServiceOpen, setIsEditServiceOpen] = useState(false);
   const [isDeleteServiceOpen, setIsDeleteServiceOpen] = useState(false);
+  const [showPaidScreen, setShowPaidScreen] = useState(false);
+
   const servicesData = [
     {
       id: 1,
@@ -169,7 +172,6 @@ const BookingDetails = ({ onBack }) => {
                       <img 
                         src="https://randomuser.me/api/portraits/men/32.jpg" 
                         alt="James Robert" 
-                        className="w-full h-full object-cover"
                       />
                     </div>
                     <div>
@@ -358,7 +360,13 @@ const BookingDetails = ({ onBack }) => {
                         <button 
                           className="text-blue-500 hover:text-blue-600" 
                           title="Payment"
-                          onClick={() => setIsPendingPaymentOpen(true)}
+                          onClick={() => {
+                            if (service.paymentStatus === 'Paid') {
+                              setShowPaidScreen(true);
+                            } else {
+                              setIsPendingPaymentOpen(true);
+                            }
+                          }}
                         >
                           <PaymentIcon />
                         </button>
@@ -406,6 +414,23 @@ const BookingDetails = ({ onBack }) => {
       </div>
 
       {/* View Logs Modal */}
+
+        {/* Paid Screen Modal (uses PaidJobDetails component) */}
+        {showPaidScreen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <PaidJobDetails />
+              <div className="flex justify-end p-4">
+                <button 
+                  onClick={() => setShowPaidScreen(false)}
+                  className="bg-gray-800 text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-900 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       {isViewLogsOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">

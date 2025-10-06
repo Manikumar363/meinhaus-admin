@@ -20,8 +20,9 @@ function App() {
         <Route path="/auth/signin" element={<Login />} />
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
         <Route path="/auth/set-new-password" element={<SetNewPassword />} />
-        <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>}>
+        </Route>
         <Route path="*" element={<div className="p-6">404 Not Found</div>} />
       </Routes>
       <ToastContainer

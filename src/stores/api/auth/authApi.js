@@ -5,14 +5,25 @@ const API_BASE = (process.env.REACT_APP_API_URL || '').replace(/\/+$/, '');
 
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE,
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.accessToken;
-      if (token) headers.set('authorization', `Bearer ${token}`);
-      return headers;
+  baseQuery: async (args, api, extraOptions) => {
+    const rawBaseQuery = fetchBaseQuery({
+      baseUrl: API_BASE,
+      prepareHeaders: (headers, { getState }) => {
+        const token = getState().auth.accessToken;
+        if (token) headers.set('authorization', `Bearer ${token}`);
+        return headers;
+      }
+    });
+    const result = await rawBaseQuery(args, api, extraOptions);
+    if (result?.error?.status === 401 || result?.error?.status === 403) {
+      localStorage.removeItem('admin_access');
+      localStorage.removeItem('admin_refresh');
+      api.dispatch(adminLogout());
+      // Redirect to login page
+      window.location.href = '/auth/signin';
     }
-  }),
+    return result;
+  },
   endpoints: (builder) => ({
     adminSignin: builder.mutation({
       query: ({ email, password }) => ({
