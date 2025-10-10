@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { EyeIcon, EditIcon, DeleteIcon, dotsIcon as DotIcon, PaymentIcon, UploadIcon } from "../ui/icons";
-import PaidJobDetails from "./PaidJobDetails";
+import PaidDetails from "./PaidDetails";
+import { useNavigate } from 'react-router-dom';
 
 const BookingDetails = ({ onBack }) => {
   const [isViewLogsOpen, setIsViewLogsOpen] = useState(false);
@@ -10,7 +11,8 @@ const BookingDetails = ({ onBack }) => {
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
   const [isEditServiceOpen, setIsEditServiceOpen] = useState(false);
   const [isDeleteServiceOpen, setIsDeleteServiceOpen] = useState(false);
-  const [showPaidScreen, setShowPaidScreen] = useState(false);
+  const [showPaidJobDetails, setShowPaidJobDetails] = useState(false);
+  const navigate = useNavigate();
 
   const servicesData = [
     {
@@ -354,19 +356,13 @@ const BookingDetails = ({ onBack }) => {
                     </td>
                     <td className="px-3 py-4">
                       <div className="flex items-center gap-3">
-                        <button className="text-yellow-500 hover:text-yellow-600" title="View">
+                        <button className="text-yellow-500 hover:text-yellow-600" title="View"
+                         onClick={() => navigate(`/paid-details/${service.id}`)}>
                           <EyeIcon />
                         </button>
                         <button 
                           className="text-blue-500 hover:text-blue-600" 
                           title="Payment"
-                          onClick={() => {
-                            if (service.paymentStatus === 'Paid') {
-                              setShowPaidScreen(true);
-                            } else {
-                              setIsPendingPaymentOpen(true);
-                            }
-                          }}
                         >
                           <PaymentIcon />
                         </button>
@@ -415,22 +411,11 @@ const BookingDetails = ({ onBack }) => {
 
       {/* View Logs Modal */}
 
-        {/* Paid Screen Modal (uses PaidJobDetails component) */}
-        {showPaidScreen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-              <PaidJobDetails />
-              <div className="flex justify-end p-4">
-                <button 
-                  onClick={() => setShowPaidScreen(false)}
-                  className="bg-gray-800 text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-900 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Show Paid Job Details as full page if triggered */}
+      {showPaidJobDetails && (
+        <PaidDetails onBack={() => setShowPaidJobDetails(false)} />
+      )}
+      {/* ...existing code... */}
       {isViewLogsOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">

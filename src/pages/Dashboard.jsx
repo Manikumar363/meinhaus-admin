@@ -30,11 +30,12 @@ import {
   upArrowIcon as UpArrowIcon,
   downArrowIcon as DownArrowIcon,
   bookingIcon as BookingIcon,
-  pricefeedbackIcon as PriceFeedbackIcon,   
+  pricefeedbackIcon as PriceFeedbackIcon, 
+    
 
 } from '../components/ui/icons';
 
-const Dashboard = () => {
+const Dashboard = ({ page }) => {
   const [activeMenu, setActiveMenu] = useState('content');
   const [showContentDropdown, setShowContentDropdown] = useState(true);
   const [activeContentPage, setActiveContentPage] = useState('slider');
@@ -63,20 +64,22 @@ const Dashboard = () => {
     { id: 'complimentary', label: 'Complimentary Services', icon: <ComplimentaryIcon className="w-3 h-3" />, component: <ComplimentarySection /> },
   ];
 
-  // Pick the active component (single wrapper so it can stretch full height)
-  let activeComponent = null;
-  if (activeMenu === 'content') {
-    activeComponent = contentPages.find(p => p.id === activeContentPage)?.component;
-  } else if (activeMenu === 'about') activeComponent = <AboutSection />;
-  else if (activeMenu === 'education') activeComponent = <EducationSection />;
-  else if (activeMenu === 'gallery') activeComponent = <div>Gallery Section Coming Soon...</div>;
-  else if (activeMenu === 'complimentaryService') activeComponent = <ComplimentaryServicePage />;
-  else if (activeMenu === 'query') activeComponent = <QueryPage />;
-  else if (activeMenu === 'services') activeComponent = <ServiceSectionPage />;
-  else if (activeMenu === 'booking') activeComponent = <BookingSection />;
-  else if (activeMenu === 'pricefeedback') activeComponent = <PriceFeedback />;
-  else if (activeMenu === 'createEstimate') activeComponent = <CreateEstimate />;
-  else if (activeMenu === 'allEstimates') activeComponent = <AllEstimates />;
+  // If 'page' prop is provided, render it as the main content (for routed pages like PaidDetails)
+  let activeComponent = page || null;
+  if (!activeComponent) {
+    if (activeMenu === 'content') {
+      activeComponent = contentPages.find(p => p.id === activeContentPage)?.component;
+    } else if (activeMenu === 'about') activeComponent = <AboutSection />;
+    else if (activeMenu === 'education') activeComponent = <EducationSection />;
+    else if (activeMenu === 'gallery') activeComponent = <div>Gallery Section Coming Soon...</div>;
+    else if (activeMenu === 'complimentaryService') activeComponent = <ComplimentaryServicePage />;
+    else if (activeMenu === 'query') activeComponent = <QueryPage />;
+    else if (activeMenu === 'services') activeComponent = <ServiceSectionPage />;
+    else if (activeMenu === 'booking') activeComponent = <BookingSection />;
+    else if (activeMenu === 'pricefeedback') activeComponent = <PriceFeedback />;
+    else if (activeMenu === 'createEstimate') activeComponent = <CreateEstimate />;
+    else if (activeMenu === 'allEstimates') activeComponent = <AllEstimates />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
