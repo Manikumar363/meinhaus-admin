@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { EditIcon1 } from "../ui/icons";
+import { EditIcon1, TotalJobs } from "../ui/icons";
 import Assign from "../ui/assign";
+import { UpIcon, DownIcon, TickIcon, CrossIcon } from "../ui/icons";
 
 const professionals = [
   {
@@ -184,11 +185,31 @@ const BiddingDetails = () => {
         </div>
       )}
         <div className="flex gap-4 mb-6">
-          <div className="rounded-lg px-6 py-4 font-bold text-lg bg-purple-100 text-purple-600">$2500.00 <span className="block text-xs font-medium mt-1">Max. Bid Amount</span></div>
-          <div className="rounded-lg px-6 py-4 font-bold text-lg bg-blue-100 text-blue-600">$1900.00 <span className="block text-xs font-medium mt-1">Min. Bid Amount</span></div>
-          <div className="rounded-lg px-6 py-4 font-bold text-lg bg-yellow-100 text-yellow-600">120 <span className="block text-xs font-medium mt-1">Sent</span></div>
-          <div className="rounded-lg px-6 py-4 font-bold text-lg bg-green-100 text-green-600">80 <span className="block text-xs font-medium mt-1">Accepted</span></div>
-          <div className="rounded-lg px-6 py-4 font-bold text-lg bg-pink-100 text-pink-600">02 <span className="block text-xs font-medium mt-1">Declined</span></div>
+          <div className="rounded-lg px-6 py-4 font-bold text-lg flex items-center gap-3 bg-purple-100 text-purple-600">
+            <span className="inline-block align-middle"><UpIcon /></span>
+            <span>$2500.00</span>
+            <span className="block text-xs font-medium mt-1">Max. Bid Amount</span>
+          </div>
+          <div className="rounded-lg px-6 py-4 font-bold text-lg flex items-center gap-3 bg-blue-100 text-blue-600">
+            <span className="inline-block align-middle"><DownIcon /></span>
+            <span>$1900.00</span>
+            <span className="block text-xs font-medium mt-1">Min. Bid Amount</span>
+          </div>
+          <div className="rounded-lg px-6 py-4 font-bold text-lg flex items-center gap-3 bg-yellow-100 text-yellow-600">
+            <span className="inline-block align-middle"><TotalJobs /></span>
+            <span>120</span>
+            <span className="block text-xs font-medium mt-1">Sent</span>
+          </div>
+          <div className="rounded-lg px-6 py-4 font-bold text-lg flex items-center gap-3 bg-green-100 text-green-600">
+            <span className="inline-block align-middle"><TickIcon /></span>
+            <span>80</span>
+            <span className="block text-xs font-medium mt-1">Accepted</span>
+          </div>
+          <div className="rounded-lg px-6 py-4 font-bold text-lg flex items-center gap-3 bg-pink-100 text-pink-600">
+            <span className="inline-block align-middle"><CrossIcon /></span>
+            <span>02</span>
+            <span className="block text-xs font-medium mt-1">Declined</span>
+          </div>
         </div>
         <div className="bg-white rounded-xl shadow p-6">
           <div className="flex gap-4 mb-4">

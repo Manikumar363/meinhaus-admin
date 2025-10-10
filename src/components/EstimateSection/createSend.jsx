@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { MessageIcon, EditIcon1 } from "../ui/icons";
 import Assign from "../ui/assign";
 import Unassign from "../ui/unassign";
+import { VideoIcon, BagIcon, TotalView, TotalJobs, UniqueviewIcon } from "../ui/icons";
 
 const professionals = [
   {
@@ -60,11 +61,11 @@ const professionals = [
 ];
 
 const stats = [
-  { label: "Unique View", value: 34, color: "bg-purple-100 text-purple-600" },
-  { label: "Total Views", value: 643, color: "bg-blue-100 text-blue-600" },
-  { label: "Total Jobs Sent", value: 643, color: "bg-yellow-100 text-yellow-600" },
-  { label: "Total Applied", value: 543, color: "bg-green-100 text-green-600" },
-  { label: "Total Subscribed", value: 23, color: "bg-pink-100 text-pink-600" },
+  { label: "Unique View", value: 34, color: "bg-purple-100 text-purple-600", icon: <UniqueviewIcon /> },
+  { label: "Total Views", value: 643, color: "bg-blue-100 text-blue-600", icon: <TotalView /> },
+  { label: "Total Jobs Sent", value: 643, color: "bg-yellow-100 text-yellow-600", icon: <TotalJobs /> },
+  { label: "Total Applied", value: 543, color: "bg-green-100 text-green-600", icon: <BagIcon /> },
+  { label: "Total Subscribed", value: 23, color: "bg-pink-100 text-pink-600", icon: <VideoIcon /> },
 ];
 
 const CreateSend = () => {
@@ -175,7 +176,11 @@ const CreateSend = () => {
 
         <div className="flex gap-4 mb-6">
           {stats.map((stat, idx) => (
-            <div key={idx} className={`rounded-lg px-6 py-4 font-bold text-lg ${stat.color}`}>{stat.value} <span className="block text-xs font-medium mt-1">{stat.label}</span></div>
+            <div key={idx} className={`rounded-lg px-6 py-4 font-bold text-lg flex items-center gap-3 ${stat.color}`}>
+              <span className="inline-block align-middle">{stat.icon}</span>
+              <span>{stat.value}</span>
+              <span className="block text-xs font-medium mt-1">{stat.label}</span>
+            </div>
           ))}
         </div>
 
