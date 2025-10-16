@@ -27,9 +27,9 @@ const CreateEstimate = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -43,9 +43,9 @@ const CreateEstimate = () => {
       professionalDescription: formData.professionalDescription,
     };
     setServices([...services, newService]);
-    
+
     // Reset service fields
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       serviceName: "",
       amount: "",
@@ -68,13 +68,22 @@ const CreateEstimate = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button className="text-gray-500 hover:text-black">
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M15 19l-7-7 7-7"/>
+              <svg
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">Create Estimate</h1>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Create Estimate
+            </h1>
           </div>
-          
+
           {/* Checkboxes aligned inline with header */}
           <div className="flex gap-6">
             <label className="flex items-center gap-2">
@@ -84,7 +93,7 @@ const CreateEstimate = () => {
                 checked={formData.estimateType === "new"}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    setFormData(prev => ({ ...prev, estimateType: "new" }));
+                    setFormData((prev) => ({ ...prev, estimateType: "new" }));
                   }
                 }}
                 className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
@@ -98,7 +107,7 @@ const CreateEstimate = () => {
                 checked={formData.estimateType === "draft"}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    setFormData(prev => ({ ...prev, estimateType: "draft" }));
+                    setFormData((prev) => ({ ...prev, estimateType: "draft" }));
                   }
                 }}
                 className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
@@ -118,9 +127,7 @@ const CreateEstimate = () => {
               <div className="text-gray-600 font-medium pb-2 border-b border-gray-200">
                 Project Details
               </div>
-              <div className="text-gray-600 font-medium pb-2">
-                Services
-              </div>
+              <div className="text-gray-600 font-medium pb-2">Services</div>
             </div>
           </div>
 
@@ -129,8 +136,10 @@ const CreateEstimate = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               {/* Customer Details Section */}
               <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Customer Details</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Customer Details
+                </h2>
+
                 {/* Draft Name for Draft Estimate */}
                 {formData.estimateType === "draft" && (
                   <div className="mb-6">
@@ -147,7 +156,7 @@ const CreateEstimate = () => {
                     />
                   </div>
                 )}
-                
+
                 {/* Customer Type */}
                 <div className="flex gap-4 mb-6">
                   <label className="flex items-center gap-2">
@@ -157,7 +166,10 @@ const CreateEstimate = () => {
                       checked={formData.customerType === "new"}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setFormData(prev => ({ ...prev, customerType: "new" }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            customerType: "new",
+                          }));
                         }
                       }}
                       className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
@@ -171,7 +183,10 @@ const CreateEstimate = () => {
                       checked={formData.customerType === "existing"}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setFormData(prev => ({ ...prev, customerType: "existing" }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            customerType: "existing",
+                          }));
                         }
                       }}
                       className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
@@ -212,7 +227,11 @@ const CreateEstimate = () => {
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleInputChange}
-                        placeholder={formData.estimateType === "draft" ? "James Robert" : "Enter full name"}
+                        placeholder={
+                          formData.estimateType === "draft"
+                            ? "James Robert"
+                            : "Enter full name"
+                        }
                         className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500 placeholder-gray-400"
                       />
                     </div>
@@ -227,7 +246,11 @@ const CreateEstimate = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder={formData.estimateType === "draft" ? "jamesrobert@gmail.com" : "Enter e-mail id"}
+                        placeholder={
+                          formData.estimateType === "draft"
+                            ? "jamesrobert@gmail.com"
+                            : "Enter e-mail id"
+                        }
                         className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500 placeholder-gray-400"
                       />
                     </div>
@@ -246,7 +269,11 @@ const CreateEstimate = () => {
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          placeholder={formData.estimateType === "draft" ? "7867867862" : "Enter phone number"}
+                          placeholder={
+                            formData.estimateType === "draft"
+                              ? "7867867862"
+                              : "Enter phone number"
+                          }
                           className="flex-1 px-3 py-3 border border-gray-300 rounded-r-md bg-gray-50 text-gray-500 placeholder-gray-400"
                         />
                       </div>
@@ -264,7 +291,10 @@ const CreateEstimate = () => {
                         checked={formData.addressType === "new"}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setFormData(prev => ({ ...prev, addressType: "new" }));
+                            setFormData((prev) => ({
+                              ...prev,
+                              addressType: "new",
+                            }));
                           }
                         }}
                         className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
@@ -278,7 +308,10 @@ const CreateEstimate = () => {
                         checked={formData.addressType === "choose"}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setFormData(prev => ({ ...prev, addressType: "choose" }));
+                            setFormData((prev) => ({
+                              ...prev,
+                              addressType: "choose",
+                            }));
                           }
                         }}
                         className="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
@@ -300,9 +333,15 @@ const CreateEstimate = () => {
                           className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
                         >
                           <option value="">Select Address</option>
-                          <option value="123 Main St, Toronto, ON">123 Main St, Toronto, ON</option>
-                          <option value="456 Oak Ave, Vancouver, BC">456 Oak Ave, Vancouver, BC</option>
-                          <option value="789 Pine Rd, Calgary, AB">789 Pine Rd, Calgary, AB</option>
+                          <option value="123 Main St, Toronto, ON">
+                            123 Main St, Toronto, ON
+                          </option>
+                          <option value="456 Oak Ave, Vancouver, BC">
+                            456 Oak Ave, Vancouver, BC
+                          </option>
+                          <option value="789 Pine Rd, Calgary, AB">
+                            789 Pine Rd, Calgary, AB
+                          </option>
                         </select>
                       ) : (
                         <input
@@ -334,8 +373,10 @@ const CreateEstimate = () => {
 
               {/* Project Details Section */}
               <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Details</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Project Details
+                </h2>
+
                 <div className="grid grid-cols-1 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -350,7 +391,7 @@ const CreateEstimate = () => {
                       className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500 placeholder-gray-400"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Description
@@ -401,8 +442,10 @@ const CreateEstimate = () => {
 
               {/* Service Details Section */}
               <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Service Details</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Service Details
+                </h2>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -415,13 +458,15 @@ const CreateEstimate = () => {
                       className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
                     >
                       <option value="">Select Service</option>
-                      <option value="appliance-install">Appliance Install</option>
+                      <option value="appliance-install">
+                        Appliance Install
+                      </option>
                       <option value="home-painting">Home Painting</option>
                       <option value="plumbing">Plumbing</option>
                       <option value="electrical">Electrical</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Amount
@@ -435,7 +480,7 @@ const CreateEstimate = () => {
                       className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500 placeholder-gray-400"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Registration Amount
@@ -465,7 +510,7 @@ const CreateEstimate = () => {
                       className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500 placeholder-gray-400"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Professional Description
@@ -496,26 +541,50 @@ const CreateEstimate = () => {
                 {/* Services List */}
                 {services.length > 0 && (
                   <div className="mt-6">
-                    <h3 className="text-lg font-medium text-gray-800 mb-3">Added Services</h3>
+                    <h3 className="text-lg font-medium text-gray-800 mb-3">
+                      Added Services
+                    </h3>
                     <div className="space-y-3">
                       {services.map((service, index) => (
-                        <div key={service.id} className="p-4 border border-gray-200 rounded-md bg-gray-50">
+                        <div
+                          key={service.id}
+                          className="p-4 border border-gray-200 rounded-md bg-gray-50"
+                        >
                           <div className="flex justify-between items-start">
                             <div>
-                              <h4 className="font-medium text-gray-800">{service.serviceName}</h4>
-                              <p className="text-sm text-gray-600">Amount: ${service.amount}</p>
-                              <p className="text-sm text-gray-600">Registration: ${service.registrationAmount}</p>
+                              <h4 className="font-medium text-gray-800">
+                                {service.serviceName}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                Amount: ${service.amount}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Registration: ${service.registrationAmount}
+                              </p>
                               {service.description && (
-                                <p className="text-sm text-gray-600 mt-2">{service.description}</p>
+                                <p className="text-sm text-gray-600 mt-2">
+                                  {service.description}
+                                </p>
                               )}
                             </div>
                             <button
                               type="button"
-                              onClick={() => setServices(services.filter(s => s.id !== service.id))}
+                              onClick={() =>
+                                setServices(
+                                  services.filter((s) => s.id !== service.id)
+                                )
+                              }
                               className="text-red-600 hover:text-red-800"
                             >
-                              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6"/>
+                              <svg
+                                width="20"
+                                height="20"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
                               </svg>
                             </button>
                           </div>
